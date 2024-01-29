@@ -1,3 +1,0 @@
-/Users/nimrod/CLionProjects/Compiler/cmake-build-debug/CMakeFiles/Compiler.dir
-/Users/nimrod/CLionProjects/Compiler/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/nimrod/CLionProjects/Compiler/cmake-build-debug/CMakeFiles/rebuild_cache.dir
