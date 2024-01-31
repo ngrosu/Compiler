@@ -35,6 +35,6 @@ typedef enum
     TOKEN_OR,
     TOKEN_AND,
     TOKEN_NOT
-} token_type;
+} TokenType;
 
 #endif //COMPILER_LEXER_H

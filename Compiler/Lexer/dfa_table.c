@@ -3,33 +3,154 @@
 //
 
 #include "dfa_table.h"
+#include <stdio.h>
+#include <string.h>
 
 
 DFA create_DFA()
 {
     DFA dfa = malloc(sizeof(_DFA));
-    dfa->num_of_states=1;
-    dfa->states=calloc(dfa->num_of_states,sizeof(token_type));
-    dfa->transition_matrix=calloc(dfa->num_of_states,sizeof(short)*NUM_OF_CHARS);
+    dfa->num_of_states=1; // default size
+    dfa->states=calloc(dfa->num_of_states,sizeof(TokenType));
+    dfa->transition_matrix=calloc(dfa->num_of_states, sizeof(StatesInt) * NUM_OF_CHARS);
     return dfa;
 }
 
 void init_DFA(DFA dfa)
 {
+    // create a language specific table (hardcoded)
 }
 
-void allocate_states(DFA dfa, short state_pos)
+bool allocate_states(DFA dfa, StatesInt new_amount)
 {
-
-}
-
-void add_transition(DFA dfa, char input, short state, short transition)
-{
-    if (!(dfa->num_of_states>state && dfa->num_of_states>transition))
+    void* temp;
+    if (dfa->num_of_states<new_amount) // check that you are adding MORE states
     {
-        dfa->num_of_states = (state>transition ? state : transition);
-        dfa->states = realloc(dfa->states, (dfa->num_of_states+1)*sizeof(token_type));
-        dfa->transition_matrix = realloc(dfa->transition_matrix,
-                                         (dfa->num_of_states+1)*sizeof(short)*NUM_OF_CHARS)
+
+        temp = realloc(dfa->states, (new_amount)*sizeof(TokenType)); // realloc states array
+        if (!temp)  // check for successful allocation
+        { return false; }
+        dfa->states = temp;
+        memset(dfa->states+dfa->num_of_states, 0,  // set all the newly allocated memory to 0
+               (new_amount-dfa->num_of_states)*(sizeof(TokenType)));
+
+
+        temp = realloc(dfa->transition_matrix, new_amount *
+                                    NUM_OF_CHARS * sizeof(dfa->transition_matrix[0][0]));
+        if (!temp)
+        { return false; }
+        dfa->transition_matrix = temp;
+        memset(dfa->transition_matrix[dfa->num_of_states], 0, // set all the newly allocated memory to 0
+               (new_amount-dfa->num_of_states)*NUM_OF_CHARS*(sizeof(StatesInt)));
+
+        dfa->num_of_states=new_amount; // update the amount of states in the DFA
+        return true;
+    }
+    return true;
+
+}
+
+void set_transition(DFA dfa, char input, StatesInt curr_state, StatesInt dest_state)
+{
+    dfa->transition_matrix[curr_state][input] = dest_state;
+}
+
+
+
+void set_state_alnum_to_identifier(DFA dfa, StatesInt state)
+{
+    if (state>=dfa->num_of_states)
+    {
+        printf("\033[0;31m"); //Set the text to the color red
+        printf("----WARNING----\nTRIED TO SET ALNUM TO IDENTIFIER FROM A NONEXISTENT STATE %d\n----WARNING----\n",
+               state);
+        printf("\033[0m"); //Resets the text to default color
+        return;}  //
+    StatesInt* state_ptr = dfa->transition_matrix[state]; // To avoid unnecessary ptr dereferences
+    int i;
+    // iterate over each alnum character
+    // hardcoded- alnums will never change.
+    for (i='0'; i<='9';i++)
+    {
+        state_ptr[i] = IDENTIFIER_STATE;
+    }
+    for (i='A'; i<='Z'; i++)
+    {
+        state_ptr[i] = IDENTIFIER_STATE;
+    }
+    for (i='a'; i<='z'; i++)
+    {
+        state_ptr[i] = IDENTIFIER_STATE;
+    }
+    state_ptr['_'] = IDENTIFIER_STATE;
+}
+
+void set_state(DFA dfa, StatesInt state, TokenType token_type)
+{
+    dfa->states[state] = token_type;
+}
+
+void add_token_to_DFA(DFA dfa, char* token, TokenType token_type, StatesInt start)
+{
+    StatesInt curr_state = dfa->num_of_states; // save the current number of initialized states
+    if (!allocate_states(dfa, dfa->num_of_states+ strlen(token)))
+    {   // Check that the memory allocated properly.
+        printf("Failed to allocate memory for token %s, state %d", token, dfa->num_of_states);
+        exit(0);
+    }
+    set_transition(dfa, *token, start, curr_state);
+    token++; // set a transition from the chosen start state to the first uninitialized state and advance the token
+    while (*token)
+    {
+        set_transition(dfa, *token, curr_state, curr_state+1);
+        // set a transition from the first uninitialized state to the next one
+        token++;
+        curr_state++;
+    }
+    set_state(dfa, curr_state, token_type); // mark the final state added as an accepting state for the token type
+}
+
+void add_alnum_token_to_DFA(DFA dfa, char* token, TokenType token_type, StatesInt start)
+{
+    StatesInt curr_state = dfa->num_of_states; // save the current number of initialized states
+
+    if (!allocate_states(dfa, dfa->num_of_states+ strlen(token)))
+    {   // Check that the memory allocated properly.
+        printf("Failed to allocate memory for token %s, state %d", token, dfa->num_of_states);
+        exit(0);
+    }
+    set_transition(dfa, *token, start, curr_state);
+    token++; // set a transition from the chosen start state to the first uninitialized state and advance the token
+    while (*token)
+    {
+        set_state_alnum_to_identifier(dfa, curr_state); // set transitions alnum->identifier for the state
+        set_transition(dfa, *token, curr_state, curr_state+1);
+        // set a transition from the first uninitialized state to the next one
+        token++;
+        curr_state++;
+    }
+    set_state_alnum_to_identifier(dfa, curr_state); // add transitions alnum->identifier from the accepting state
+    set_state(dfa, curr_state, token_type); // mark the accepting state as the appropriate token
+}
+
+void print_transition_matrix(DFA dfa)
+{
+    int i; int j;
+    printf("   |");
+    for (i='!'; i<NUM_OF_CHARS-1; i++)
+    { printf("%3c", i); }
+    printf("\n");
+    for (i='!'; i<NUM_OF_CHARS-1; i++)
+    { printf("___"); }
+    printf("\n");
+    for(i=0; i<dfa->num_of_states; i++)
+    {
+        printf("%3d|", i);
+        for (j='!'; j<NUM_OF_CHARS-1; j++)
+        {
+            printf("%3d",dfa->transition_matrix[i][j]);
+        }
+        printf("\n");
     }
 }
+
