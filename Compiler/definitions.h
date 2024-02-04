@@ -6,6 +6,7 @@
 #define COMPILER_DEFINITIONS_H
 
 // DFA_TABLE
+#define ID_DELIMITERS " +=\n;,()[]/&|!"
 #define NUM_OF_CHARS 128
 #define START_STATE 1
 #define DELIMITER_STATE 2
