@@ -65,6 +65,7 @@ typedef enum
 
 // PARSER
 #define MAX_RULE_SIZE 7
+#define SYMBOL_NAME_MAX_SIZE 10
 
 
 // ERROR

@@ -2,8 +2,8 @@
 // Created by Nimrod on 29/02/2024.
 //
 
-#ifndef COMPILER_PGDATASTRUCTURES_H
-#define COMPILER_PGDATASTRUCTURES_H
+#ifndef COMPILER_DATASTRUCTURES_H
+#define COMPILER_DATASTRUCTURES_H
 #include "../../Shared/token.h"
 #include "../../Shared/error.h"
 #include <stdlib.h>
@@ -46,13 +46,31 @@ AVLNode* insert(AVLNode* root, ProdRule data); // insert into AVL
 
 AVLNode* find(AVLNode* root, ProdRule data); // find in AVL tree
 
+AVLNode* find_head(AVLNode* root, struct Symbol* symbol); // find first node to have head
+
 void pre_order(AVLNode* root); // print AVL tree in order
 
 // Symbol
 
 typedef struct Symbol
 {
-  //...
+    int symbolID;
+    char isTerminal;
+    TokenType token;
+    char *name;
 } *SymbolPtr, Symbol;
 
-#endif //COMPILER_PGDATASTRUCTURES_H
+SymbolPtr init_symbol(char* name, char is_terminal, TokenType token, int id);
+
+typedef struct SymbolArr
+{
+    int array_size;
+    int array_capacity;
+    SymbolPtr* symbols;
+} *SymbolArrPtr,SymbolArr;
+
+SymbolArrPtr init_array();
+
+void add_to_array(SymbolArrPtr arr, SymbolPtr);
+
+#endif //COMPILER_DATASTRUCTURES_H
