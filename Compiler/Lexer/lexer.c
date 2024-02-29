@@ -27,7 +27,7 @@ Lexer init_lexer(char* file_path)
 
     lexer->num_of_tokens=0;
     lexer->tokens_allocated_size=0;
-    lexer->curr_line=0;
+    lexer->curr_line=1;
 
     return lexer;
 }
@@ -35,10 +35,10 @@ Lexer init_lexer(char* file_path)
 void skip_whitespaces(Lexer lexer)
 {
     int c;
-    c = fgetc(lexer->file);
+    c = fgetc(lexer->file); // check c against all whitespace characters
     while(c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\v' || c == '\f')
     {
-        if (c=='\n')
+        if (c=='\n') // check if we moved down a line
         {lexer->curr_line++;}
         c = fgetc(lexer->file);
     }
@@ -64,32 +64,33 @@ void add_token(Lexer lexer, Token token)
 
 Token get_next_token(Lexer lexer)
 {
-    memset(lexer->token_buffer, 0, sizeof(lexer->token_buffer));
+    memset(lexer->token_buffer, 0, sizeof(lexer->token_buffer)); // reset the lexer token buffer
     int lexeme_length=0;
-    int c;
+    int chr;
     StatesInt temp_state;
     StatesInt state = 1;
-    c = fgetc(lexer->file);
-    while (c != EOF && lexeme_length<TOKEN_MAXSIZE)
+    chr = fgetc(lexer->file); // get the next character
+    while (chr != EOF && lexeme_length < TOKEN_MAXSIZE) //
     {
-        temp_state = lexer->dfa->transition_matrix[state][c];
+        temp_state = lexer->dfa->transition_matrix[state][chr];
         switch (temp_state) {
             case 0:
             {
-                lexer->token_buffer[lexeme_length++] = (char)c;
+                lexer->token_buffer[lexeme_length++] = (char)chr;
                 report_error(ERR_LEXICAL, lexer->curr_line, lexer->token_buffer);
                 return init_token(TOKEN_ERROR, lexer->token_buffer);
             }
             case DELIMITER_STATE: {
-                ungetc(c, lexer->file);
+                ungetc(chr, lexer->file);
                 return init_token(lexer->dfa->states[state], lexer->token_buffer);
 
             }
+
         }
         state = temp_state;
-        lexer->token_buffer[lexeme_length] = (char)c;
+        lexer->token_buffer[lexeme_length] = (char)chr;
         lexeme_length++;
-        c = fgetc(lexer->file);
+        chr = fgetc(lexer->file);
     }
     if(state==START_STATE)
     {return init_token(TOKEN_EOF, "");}
@@ -99,29 +100,41 @@ Token get_next_token(Lexer lexer)
 void print_tokens(Lexer lexer)
 {
     int i;
+    Token token;
     for(i=0; i<lexer->num_of_tokens; i++)
     {
-        printf("%s(%s), ", get_token_name(lexer->tokens[i]->type), lexer->tokens[i]->lexeme);
+        token = lexer->tokens[i];  // if a token is ID, INT_LIT, or comment, print its contents as well
+        if (token->type==TOKEN_IDENTIFIER ||
+        token->type == TOKEN_INT_LITERAL ||
+        token->type == TOKEN_COMMENT ||
+        token->type == TOKEN_STRING_LITERAL )
+        {
+            printf("%s(%s), ", get_token_name(lexer->tokens[i]->type), lexer->tokens[i]->lexeme);
+        }
+        else {
+            printf("%s, ", get_token_name(lexer->tokens[i]->type));
+        }
     }
 }
 
 void tokenize(Lexer lexer)
 {
-    while (1)
+    char run=1;
+    while (run)
     {
         Token next_token;
 
-        skip_whitespaces(lexer);
-        next_token = get_next_token(lexer);
+        skip_whitespaces(lexer);  // get to the start of the next token
+        next_token = get_next_token(lexer); // get the token
 
-        if(next_token->type == 0)
+        if(next_token->type == 0) // if it's a token error, report an error
         {
             report_error(ERR_LEXICAL, lexer->curr_line, "Invalid Token/Unexpected character");
-            exit(1);
+            exit(1); // exit_lexer()
         }
-        add_token(lexer, next_token);
+        add_token(lexer, next_token); // add the token to the lexer
         if(next_token->type == TOKEN_EOF)
-        { return; }
+        { run = 0; } // in the case of an EOF token, stop reading for more tokens
 
     }
 }

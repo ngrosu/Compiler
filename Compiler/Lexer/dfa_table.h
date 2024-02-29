@@ -39,10 +39,10 @@ void add_symbol_token_to_DFA(DFA, char*, TokenType, StatesInt);
 
 void set_state(DFA, StatesInt, TokenType); // Set an accepting state in the states array to the appropriate token
 
-void set_state_alnum_to_identifier(DFA, StatesInt); // Set transitions to all alnum characters
+void set_state_alnums_to_identifier(DFA dfa, StatesInt state); // Set transitions to all alnum characters
 // except for one to the identifier state
 
-void add_delimiters(DFA, StatesInt, char*); // add transition to delimiter state
+void add_delimiters(DFA dfa, StatesInt state, const char *delimiters); // add transition to delimiter state
 
 void add_all_delimiters(DFA, StatesInt);
 

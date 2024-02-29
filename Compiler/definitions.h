@@ -22,6 +22,7 @@ typedef enum
     TOKEN_ERROR,
     TOKEN_EOF,
     TOKEN_IDENTIFIER,
+    TOKEN_COMMENT,
     // Literal Tokens
     TOKEN_INT_LITERAL,
     TOKEN_STRING_LITERAL,
@@ -56,9 +57,15 @@ typedef enum
     TOKEN_R_PAREN,
     TOKEN_L_BRACKET,
     TOKEN_R_BRACKET,
-    TOKEN_SEMICOLON
+    TOKEN_SEMICOLON,
+    TOKEN_EQUAL,
+    TOKEN_EQUAL_EQUAL
 
 } TokenType;
+
+// PARSER
+#define MAX_RULE_SIZE 7
+
 
 // ERROR
 typedef enum {

@@ -18,8 +18,8 @@ DFA create_DFA()
 
 void init_DFA(DFA dfa)
 {
-    char i;
-    const char* stddelimiter = " ;,\n(){}[]";
+    int i;
+    const char* stddelimiter = " /;,\n(){}[]";
 
     // state 0 is error
     // state 1 is the starting state
@@ -27,19 +27,34 @@ void init_DFA(DFA dfa)
     allocate_states(dfa, 5);
 
     // identifier
-    set_state_alnum_to_identifier(dfa, START_STATE);
-    set_state_alnum_to_identifier(dfa, IDENTIFIER_STATE);
+    set_state_alnums_to_identifier(dfa, START_STATE);
+    set_state_alnums_to_identifier(dfa, IDENTIFIER_STATE);
     set_state(dfa, IDENTIFIER_STATE, TOKEN_IDENTIFIER);
     add_delimiters(dfa, IDENTIFIER_STATE, stddelimiter);
 
     // int literal
     for(i='0'; i<='9'; i++)
     {
-        set_transition(dfa, i, START_STATE, 4);
-        set_transition(dfa, i, 4, 4);
+        set_transition(dfa, (char)i, START_STATE, 4);
+        set_transition(dfa, (char)i, 4, 4);
     }
     set_state(dfa, 4, TOKEN_INT_LITERAL);
     add_delimiters(dfa, 4, stddelimiter);
+
+    add_token_to_DFA(dfa, "//", TOKEN_COMMENT, START_STATE, "\n");
+    for(i=0; i<NUM_OF_CHARS; i++)
+    {
+        if(i!='\n') {set_transition(dfa, (char)i, dfa->num_of_states-1, dfa->num_of_states-1);}
+    }
+
+    add_token_to_DFA(dfa, "\"\n", TOKEN_STRING_LITERAL, START_STATE, "");
+    for(i=0; i<NUM_OF_CHARS; i++)
+    {
+        if(i!='\n') {set_transition(dfa, (char)i, dfa->num_of_states-2, dfa->num_of_states-2);}
+    }
+    set_transition(dfa, '\"', dfa->num_of_states-2, dfa->num_of_states-1);
+    add_all_delimiters(dfa, dfa->num_of_states-1);
+
 
     // symbols
     add_symbol_token_to_DFA(dfa, "(", TOKEN_L_PAREN, START_STATE);
@@ -98,7 +113,7 @@ void set_transition(DFA dfa, char input, StatesInt curr_state, StatesInt dest_st
 
 
 
-void set_state_alnum_to_identifier(DFA dfa, StatesInt state)
+void set_state_alnums_to_identifier(DFA dfa, StatesInt state)
 {
     if (state>=dfa->num_of_states)
     {
@@ -165,7 +180,7 @@ void add_alnum_token_to_DFA(DFA dfa, char* token, TokenType token_type, StatesIn
     token++; // set a transition from the chosen start state to the first uninitialized state and advance the token
     while (*token)
     {
-        set_state_alnum_to_identifier(dfa, curr_state); // set transitions alnum->identifier for the state
+        set_state_alnums_to_identifier(dfa, curr_state); // set transitions alnum->identifier for the state
         add_delimiters(dfa, curr_state, ID_DELIMITERS);
         set_transition(dfa, *token, curr_state, curr_state+1);
         set_state(dfa, curr_state, TOKEN_IDENTIFIER);
@@ -173,7 +188,7 @@ void add_alnum_token_to_DFA(DFA dfa, char* token, TokenType token_type, StatesIn
         token++;
         curr_state++;
     }
-    set_state_alnum_to_identifier(dfa, curr_state); // add transitions alnum->identifier from the accepting state
+    set_state_alnums_to_identifier(dfa, curr_state); // add transitions alnum->identifier from the accepting state
     set_state(dfa, curr_state, token_type); // mark the accepting state as the appropriate token
     add_delimiters(dfa, curr_state, delimiters);
 }
@@ -184,7 +199,7 @@ void add_symbol_token_to_DFA(DFA dfa, char* token, TokenType token_type, StatesI
     add_all_delimiters(dfa, dfa->num_of_states-1);
 }
 
-void add_delimiters(DFA dfa, StatesInt state, char* delimiters)
+void add_delimiters(DFA dfa, StatesInt state, const char *delimiters)
 {
     while (*delimiters)
     {

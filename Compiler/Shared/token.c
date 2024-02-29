@@ -88,7 +88,11 @@ char* get_token_name(TokenType type)
             return "R_BRACKET";
         case TOKEN_EOF:
             return "EOF";
-        default:
-            return "UNKNOWN";
+        case TOKEN_EQUAL:
+            return "EQUAL";
+        case TOKEN_EQUAL_EQUAL:
+            return "EQUAL_EQUAL";
+        case TOKEN_COMMENT:
+            return "COMMENT";
     }
 }

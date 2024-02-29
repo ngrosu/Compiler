@@ -26,7 +26,7 @@ Lexer init_lexer(char*); // create a lexer and init it with the source code's fp
 
 Token get_next_token(Lexer);
 
-void skip_whitespace(Lexer); // advance the file until the next non-whitespace
+void skip_whitespaces(Lexer); // advance the file until the next non-whitespace
 
 void print_tokens(Lexer);
 
