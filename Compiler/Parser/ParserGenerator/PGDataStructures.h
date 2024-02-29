@@ -1,0 +1,52 @@
+//
+// Created by Nimrod on 29/02/2024.
+//
+
+#ifndef COMPILER_PGDATASTRUCTURES_H
+#define COMPILER_PGDATASTRUCTURES_H
+#include "../../Shared/token.h"
+#include "../../Shared/error.h"
+#include <stdlib.h>
+#include <stdio.h>
+
+typedef struct {
+    TokenType head;
+    TokenType body[MAX_RULE_SIZE];
+    short bodySize;
+    short dot;
+} *ProdRule, ProdRuleStruct;
+
+//create new production rule
+ProdRule init_prod_rule(TokenType head, const TokenType* body, short bodySize, short dot);
+
+// return -1 if a < b, 0 if equal, 1 if a > b
+short compare_prod_rules(ProdRule a, ProdRule b);
+
+// AVL tree
+typedef struct AVLNode {
+    ProdRule data;
+    struct AVLNode* left;
+    struct AVLNode* right;
+    int height;
+} AVLNode;
+
+int height(AVLNode* N); //get height of a node
+
+int max(int a, int b); // max of 2 ints
+
+int get_balance(AVLNode* N); // get balance of node
+
+AVLNode* newNode(ProdRule data); // create a new node
+
+AVLNode* right_rotate(AVLNode* y); // perform a right rotation
+
+AVLNode* left_rotate(AVLNode* x); // perform a left rotation
+
+AVLNode* insert(AVLNode* root, ProdRule data); // insert into AVL
+
+AVLNode* find(AVLNode* root, ProdRule data); // find in AVL tree
+
+void pre_order(AVLNode* root); // print AVL tree in order
+
+
+#endif //COMPILER_PGDATASTRUCTURES_H
