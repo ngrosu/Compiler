@@ -10,14 +10,14 @@
 #include <stdio.h>
 
 typedef struct {
-    TokenType head;
-    TokenType body[MAX_RULE_SIZE];
+    struct Symbol *head;
+    struct Symbol *body[MAX_RULE_SIZE];
     short bodySize;
     short dot;
 } *ProdRule, ProdRuleStruct;
 
 //create new production rule
-ProdRule init_prod_rule(TokenType head, const TokenType* body, short bodySize, short dot);
+ProdRule init_prod_rule(struct Symbol* head, struct Symbol** body, short bodySize, short dot);
 
 // return -1 if a < b, 0 if equal, 1 if a > b
 short compare_prod_rules(ProdRule a, ProdRule b);
@@ -48,5 +48,11 @@ AVLNode* find(AVLNode* root, ProdRule data); // find in AVL tree
 
 void pre_order(AVLNode* root); // print AVL tree in order
 
+// Symbol
+
+typedef struct Symbol
+{
+  //...
+} *SymbolPtr, Symbol;
 
 #endif //COMPILER_PGDATASTRUCTURES_H

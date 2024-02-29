@@ -6,7 +6,7 @@
 
 // Prod Rules
 
-ProdRule init_prod_rule(TokenType head, const TokenType* body, short bodySize, short dot)
+ProdRule init_prod_rule(Symbol* head, Symbol** body, short bodySize, short dot)
 {
     ProdRule rule = malloc(sizeof(ProdRuleStruct)); // allocate space for rule
     rule->head = head;
@@ -166,3 +166,6 @@ void pre_order(AVLNode *root)
         pre_order(root->right);
     }
 }
+
+// Symbol
+
