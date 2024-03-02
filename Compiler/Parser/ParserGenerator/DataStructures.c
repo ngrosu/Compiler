@@ -6,7 +6,7 @@
 
 // Prod Rules
 
-ProdRule init_prod_rule(Symbol* head, Symbol** body, short bodySize, short dot)
+ProdRule init_prod_rule(int head, const int* body, short bodySize, short dot)
 {
     ProdRule rule = malloc(sizeof(ProdRuleStruct)); // allocate space for rule
     rule->head = head;
@@ -18,14 +18,23 @@ ProdRule init_prod_rule(Symbol* head, Symbol** body, short bodySize, short dot)
     rule->dot = dot;
     return rule;
 }
+ProdRule init_short_prod_rule(int head, int body, short dot)
+{
+    ProdRule rule = malloc(sizeof(ProdRuleStruct)); // allocate space for rule
+    rule->head = head;
+    rule->body[0] = body;
+    rule->bodySize = 1;
+    rule->dot = dot;
+    return rule;
+}
 
 
 
 short compare_prod_rules(ProdRule a, ProdRule b)
 {
     // compare heads
-    if (a->head->symbolID < b->head->symbolID) return -1;
-    else if (a->head->symbolID > b->head->symbolID) return 1;
+    if (a->head < b->head) return -1;
+    else if (a->head > b->head) return 1;
 
         // If heads are equal, compare the body sizes
         if (a->bodySize < b->bodySize) return -1;
@@ -33,8 +42,8 @@ short compare_prod_rules(ProdRule a, ProdRule b)
 
             // If body sizes are equal, compare the body contents element-wise
             for (int i = 0; i < a->bodySize; ++i) {
-                if (a->body[i]->symbolID < b->body[i]->symbolID) return -1;
-                else if (a->body[i]->symbolID > b->body[i]->symbolID) return 1;
+                if (a->body[i] < b->body[i]) return -1;
+                else if (a->body[i] > b->body[i]) return 1;
             }
 
                 // If contents are equal, compare the dot locations
@@ -160,15 +169,15 @@ AVLNode* find(AVLNode* root, ProdRule data)
 }
 
 
-AVLNode* find_head(AVLNode* root, struct Symbol* symbol)
+AVLNode* find_head(AVLNode* root, int symbol)
 {
     if (root == NULL)
         return root;
 
     // normal BST navigation
-    if (symbol->symbolID<root->data->head->symbolID)
+    if (symbol<root->data->head)
         return find_head(root->left, symbol);
-    else if (symbol->symbolID>root->data->head->symbolID)
+    else if (symbol>root->data->head)
         return find_head(root->right, symbol);
     else
         return root;
@@ -178,10 +187,10 @@ void pre_order(AVLNode *root)
 {
     if(root != NULL)
     {
-        printf("%s=>", root->data->head->name);
+        printf("%s=>", get_symbol_name(root->data->head));
         for(int i=0; i<root->data->bodySize; i++)
         {
-            printf("%s", root->data->body[i]->name);
+            printf("%s ", get_symbol_name(root->data->body[i]));
         }
         printf("\n");
         //printf("%d, ", root->data->head);
@@ -192,37 +201,29 @@ void pre_order(AVLNode *root)
 
 // Symbol
 
-SymbolPtr init_symbol(char* name, char is_terminal, TokenType token, int id)
-{
-    SymbolPtr symbol = malloc(sizeof(Symbol));
-    symbol->name = name;
-    symbol->isTerminal = is_terminal;
-    symbol->token = token;
-    symbol->symbolID = id;
-    return symbol;
-}
 
-SymbolArrPtr init_array()
+
+intDynArrPtr init_array()
 {
-    SymbolArrPtr arr = malloc(sizeof(SymbolArr));
+    intDynArrPtr arr = malloc(sizeof(intDynArr));
     arr->array_capacity=1;
-    arr->symbols = malloc(sizeof(Symbol));
+    arr->array = malloc(sizeof(int));
     arr->array_size=0;
     return arr;
 }
 
-void add_to_array(SymbolArrPtr arr, SymbolPtr symbol)
+void add_to_array(intDynArrPtr arr, int num)
 {
     if (arr->array_size +1 > arr->array_capacity ) {
-        void *temp = realloc(arr->symbols, sizeof(Symbol) * arr->array_capacity * 2);
+        void *temp = realloc(arr->array, sizeof(int) * arr->array_capacity * 2);
         if (temp == NULL) {
             report_error(ERR_INTERNAL, -1, "FAILED MEMORY ALLOCATION");
             return;
         }
         arr->array_capacity *= 2;
-        arr->symbols = temp;
+        arr->array = temp;
     }
-        arr->symbols[arr->array_size] = symbol;
+        arr->array[arr->array_size] = num;
         arr->array_size++;
 
 }

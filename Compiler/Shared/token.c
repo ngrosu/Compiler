@@ -94,5 +94,11 @@ char* get_token_name(TokenType type)
             return "EQUAL_EQUAL";
         case TOKEN_COMMENT:
             return "COMMENT";
+        case TOKEN_COUNT:
+            return "ERROR";
+        case TOKEN_ASTERISK:
+            return "ASTERISK";
+        case TOKEN_F_SLASH:
+            return "F_SLASH";
     }
 }

@@ -59,10 +59,19 @@ typedef enum
     TOKEN_R_BRACKET,
     TOKEN_SEMICOLON,
     TOKEN_EQUAL,
-    TOKEN_EQUAL_EQUAL
-
+    TOKEN_EQUAL_EQUAL,
+    TOKEN_ASTERISK,
+    TOKEN_F_SLASH,
+    TOKEN_COUNT // stores the amount of TokenTypes in the enum
 } TokenType;
 
+// SYMBOLS
+typedef enum {
+    SYMBOL_EXPRESSION,
+    SYMBOL_TERM,
+    SYMBOL_FACTOR,
+    SYMBOL_COUNT // stores the amount of array in SymbolType
+} SymbolType;
 // PARSER
 #define MAX_RULE_SIZE 7
 #define SYMBOL_NAME_MAX_SIZE 10

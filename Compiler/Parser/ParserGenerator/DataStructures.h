@@ -6,18 +6,21 @@
 #define COMPILER_DATASTRUCTURES_H
 #include "../../Shared/token.h"
 #include "../../Shared/error.h"
+#include "symbol.h"
 #include <stdlib.h>
 #include <stdio.h>
 
 typedef struct {
-    struct Symbol *head;
-    struct Symbol *body[MAX_RULE_SIZE];
+    int head;
+    int body[MAX_RULE_SIZE];
     short bodySize;
     short dot;
 } *ProdRule, ProdRuleStruct;
 
 //create new production rule
-ProdRule init_prod_rule(struct Symbol* head, struct Symbol** body, short bodySize, short dot);
+ProdRule init_prod_rule(int head, const int* body, short bodySize, short dot);
+
+ProdRule init_short_prod_rule(int head, int body, short dot);
 
 // return -1 if a < b, 0 if equal, 1 if a > b
 short compare_prod_rules(ProdRule a, ProdRule b);
@@ -46,31 +49,22 @@ AVLNode* insert(AVLNode* root, ProdRule data); // insert into AVL
 
 AVLNode* find(AVLNode* root, ProdRule data); // find in AVL tree
 
-AVLNode* find_head(AVLNode* root, struct Symbol* symbol); // find first node to have head
+AVLNode* find_head(AVLNode* root, int symbol); // find first_helper node to have head
 
 void pre_order(AVLNode* root); // print AVL tree in order
 
 // Symbol
 
-typedef struct Symbol
-{
-    int symbolID;
-    char isTerminal;
-    TokenType token;
-    char *name;
-} *SymbolPtr, Symbol;
 
-SymbolPtr init_symbol(char* name, char is_terminal, TokenType token, int id);
-
-typedef struct SymbolArr
+typedef struct DynamicArray
 {
     int array_size;
     int array_capacity;
-    SymbolPtr* symbols;
-} *SymbolArrPtr,SymbolArr;
+    int* array;
+} *intDynArrPtr,intDynArr;
 
-SymbolArrPtr init_array();
+intDynArrPtr init_array();
 
-void add_to_array(SymbolArrPtr arr, SymbolPtr);
+void add_to_array(intDynArrPtr arr, int num);
 
 #endif //COMPILER_DATASTRUCTURES_H
