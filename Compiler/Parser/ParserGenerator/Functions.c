@@ -24,8 +24,11 @@ void first_helper(int symbol, AVLNode *node, AVLNode *root, intDynArrPtr arr, ch
         if (temp==NULL)
         {return;}
         ProdRule prod = temp->data;
-        if (prod->body[0] != symbol) { // prevent infinite recursion
 
+        if (membership[prod->body[0]] == 0) // check if the next symbol has been explored
+        {
+            if (prod->body[0] >= TOKEN_COUNT)
+                membership[prod->body[0]] = 1; // if it's not a terminal, set it as explored
             first_helper(prod->body[0], root, root, arr, membership); // find the FIRST of the production rule
         }
         first_helper(symbol, temp->right, root, arr, membership); // look if other production rules have the same head

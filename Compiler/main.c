@@ -15,6 +15,7 @@ int main()
 
     root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_COUNT+SYMBOL_FACTOR, 0));
 
+
     int arr1[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_PLUS_OP, TOKEN_COUNT+SYMBOL_TERM};
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, arr1, 3, 0));
 
