@@ -178,7 +178,12 @@ void pre_order(AVLNode *root)
 {
     if(root != NULL)
     {
-        printf("no print function lol");
+        printf("%s=>", root->data->head->name);
+        for(int i=0; i<root->data->bodySize; i++)
+        {
+            printf("%s", root->data->body[i]->name);
+        }
+        printf("\n");
         //printf("%d, ", root->data->head);
         pre_order(root->left);
         pre_order(root->right);
@@ -208,17 +213,16 @@ SymbolArrPtr init_array()
 
 void add_to_array(SymbolArrPtr arr, SymbolPtr symbol)
 {
-    if (arr->array_size +1 > arr->array_capacity )
-    {
-        void* temp = realloc(arr->symbols, arr->array_capacity*2);
-        if (temp == NULL)
-        {
+    if (arr->array_size +1 > arr->array_capacity ) {
+        void *temp = realloc(arr->symbols, sizeof(Symbol) * arr->array_capacity * 2);
+        if (temp == NULL) {
             report_error(ERR_INTERNAL, -1, "FAILED MEMORY ALLOCATION");
             return;
         }
-        arr->array_capacity*=2;
+        arr->array_capacity *= 2;
         arr->symbols = temp;
+    }
         arr->symbols[arr->array_size] = symbol;
         arr->array_size++;
-    }
+
 }
