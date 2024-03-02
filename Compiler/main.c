@@ -27,7 +27,7 @@ int main()
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, arr3, 3, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_INT_LITERAL, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_IDENTIFIER, 0));
-    intDynArrPtr test = init_array();
+    intDynArrPtr test = init_int_dynamic_array();
     first(TOKEN_COUNT+SYMBOL_EXPRESSION, root, test, TOKEN_COUNT+SYMBOL_COUNT);
     for (int i=0; i<test->array_size; i++)
     {

@@ -20,9 +20,10 @@ typedef struct {
 //create new production rule
 ProdRule init_prod_rule(int head, const int* body, short bodySize, short dot);
 
+// init a prod rule with a single symbol body
 ProdRule init_short_prod_rule(int head, int body, short dot);
 
-// return -1 if a < b, 0 if equal, 1 if a > b
+// compare two production rules (for AVL), return -1 if a < b, 0 if equal, 1 if a > b
 short compare_prod_rules(ProdRule a, ProdRule b);
 
 // AVL tree
@@ -49,7 +50,7 @@ AVLNode* insert(AVLNode* root, ProdRule data); // insert into AVL
 
 AVLNode* find(AVLNode* root, ProdRule data); // find in AVL tree
 
-AVLNode* find_head(AVLNode* root, int symbol); // find first_helper node to have head
+AVLNode* find_head(AVLNode* root, int symbol); //  find node whose head is a certain symbol
 
 void pre_order(AVLNode* root); // print AVL tree in order
 
@@ -63,8 +64,10 @@ typedef struct DynamicArray
     int* array;
 } *intDynArrPtr,intDynArr;
 
-intDynArrPtr init_array();
+// initialize an int dynamic array
+intDynArrPtr init_int_dynamic_array();
 
-void add_to_array(intDynArrPtr arr, int num);
+// add an integer to the dynamic array
+void add_to_int_dyn_array(intDynArrPtr arr, int num);
 
 #endif //COMPILER_DATASTRUCTURES_H

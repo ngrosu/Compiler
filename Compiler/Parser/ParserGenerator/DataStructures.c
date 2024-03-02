@@ -6,7 +6,7 @@
 
 // Prod Rules
 
-ProdRule init_prod_rule(int head, const int* body, short bodySize, short dot)
+ProdRule init_prod_rule(int head, const int* body, short bodySize, short dot) // init a prod rule
 {
     ProdRule rule = malloc(sizeof(ProdRuleStruct)); // allocate space for rule
     rule->head = head;
@@ -18,7 +18,7 @@ ProdRule init_prod_rule(int head, const int* body, short bodySize, short dot)
     rule->dot = dot;
     return rule;
 }
-ProdRule init_short_prod_rule(int head, int body, short dot)
+ProdRule init_short_prod_rule(int head, int body, short dot) // init a prod rule with a single symbol body
 {
     ProdRule rule = malloc(sizeof(ProdRuleStruct)); // allocate space for rule
     rule->head = head;
@@ -30,7 +30,7 @@ ProdRule init_short_prod_rule(int head, int body, short dot)
 
 
 
-short compare_prod_rules(ProdRule a, ProdRule b)
+short compare_prod_rules(ProdRule a, ProdRule b) // compare two production rules (for AVL)
 {
     // compare heads
     if (a->head < b->head) return -1;
@@ -112,14 +112,16 @@ AVLNode* insert(AVLNode* root, ProdRule data)
     if (root == NULL)
         return(newNode(data));
 
-    short cmp = compare_prod_rules(data, root->data);
-    // normal BST insertion
+    short cmp = compare_prod_rules(data, root->data); // get the comparison between the two rules
+
+    // normal BST traversal to find the location for the new node
     if (cmp == -1)
         root->left = insert(root->left, data);
     else if (cmp == 1)
         root->right = insert(root->right, data);
     else
     {
+        // if the node already exists
         report_error(ERR_INTERNAL, -1, "Tried to add existing item to AVL");
         return root;
     }
@@ -127,16 +129,18 @@ AVLNode* insert(AVLNode* root, ProdRule data)
     // update height
     root->height = 1 + max(height(root->left), height(root->right));
 
+
+    // AVL tree balancing
     int balance = get_balance(root);
 
     if (balance > 1 && compare_prod_rules(data, root->left->data)==-1)
         return right_rotate(root);
 
-    // Right Right Case
+    // Right, Right Case
     if (balance < -1 && compare_prod_rules(data, root->right->data)==1)
         return left_rotate(root);
 
-    // Left Right Case
+    // Left, Right Case
     if (balance > 1 && compare_prod_rules(data, root->left->data)==1)
     {
         root->left = left_rotate(root->left);
@@ -169,7 +173,7 @@ AVLNode* find(AVLNode* root, ProdRule data)
 }
 
 
-AVLNode* find_head(AVLNode* root, int symbol)
+AVLNode* find_head(AVLNode* root, int symbol) // find node whose head is a certain symbol
 {
     if (root == NULL)
         return root;
@@ -203,8 +207,8 @@ void pre_order(AVLNode *root)
 
 
 
-intDynArrPtr init_array()
-{
+intDynArrPtr init_int_dynamic_array()
+{ // initialize an int dynamic array
     intDynArrPtr arr = malloc(sizeof(intDynArr));
     arr->array_capacity=1;
     arr->array = malloc(sizeof(int));
@@ -212,17 +216,18 @@ intDynArrPtr init_array()
     return arr;
 }
 
-void add_to_array(intDynArrPtr arr, int num)
-{
-    if (arr->array_size +1 > arr->array_capacity ) {
-        void *temp = realloc(arr->array, sizeof(int) * arr->array_capacity * 2);
+void add_to_int_dyn_array(intDynArrPtr arr, int num)
+{ // add an integer to the dynamic array
+    if (arr->array_size +1 > arr->array_capacity ) { // check if the array is too small
+        void *temp = realloc(arr->array, sizeof(int) * arr->array_capacity * 2); //increase arr size
         if (temp == NULL) {
             report_error(ERR_INTERNAL, -1, "FAILED MEMORY ALLOCATION");
             return;
         }
-        arr->array_capacity *= 2;
+        arr->array_capacity *= 2; // update array size
         arr->array = temp;
     }
+        // add int to array
         arr->array[arr->array_size] = num;
         arr->array_size++;
 

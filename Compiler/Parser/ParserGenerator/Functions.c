@@ -12,7 +12,7 @@ void first_helper(int symbol, AVLNode *node, AVLNode *root, intDynArrPtr arr, ch
     {
         if(membership[symbol]==0) // check whether the symbol already exists in the array
         {
-            add_to_array(arr, symbol);
+            add_to_int_dyn_array(arr, symbol);
             membership[symbol]=1;
         }
     }
@@ -28,10 +28,11 @@ void first_helper(int symbol, AVLNode *node, AVLNode *root, intDynArrPtr arr, ch
         if (membership[prod->body[0]] == 0) // check if the next symbol has been explored
         {
             if (prod->body[0] >= TOKEN_COUNT)
-                membership[prod->body[0]] = 1; // if it's not a terminal, set it as explored
+                membership[prod->body[0]] = 1; // if it's not a terminal symbol, set it as explored
             first_helper(prod->body[0], root, root, arr, membership); // find the FIRST of the production rule
         }
-        first_helper(symbol, temp->right, root, arr, membership); // look if other production rules have the same head
+        // look if other production rules have the same head
+        first_helper(symbol, temp->right, root, arr, membership);
         first_helper(symbol, temp->left, root, arr, membership);
     }
 }
@@ -39,14 +40,14 @@ void first_helper(int symbol, AVLNode *node, AVLNode *root, intDynArrPtr arr, ch
 void first(int symbol, AVLNode *node, intDynArrPtr arr, short numOfSymbols)
 {
     char *membership;
-    membership = calloc(numOfSymbols, sizeof(char));
+    membership = calloc(numOfSymbols, sizeof(char)); // create an empty membership array
     if (membership==NULL)
     {
         report_error(ERR_INTERNAL, -1, "Memory allocation failed");
         return;
     }
 
-    first_helper(symbol, node, node, arr, membership);
+    first_helper(symbol, node, node, arr, membership); // call the recursive function
 
     free(membership);
 
