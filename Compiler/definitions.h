@@ -70,11 +70,11 @@ typedef enum {
     SYMBOL_EXPRESSION,
     SYMBOL_TERM,
     SYMBOL_FACTOR,
+    SYMBOL_START,
     SYMBOL_COUNT // stores the amount of array in SymbolType
 } SymbolType;
 // PARSER
 #define MAX_RULE_SIZE 7
-#define SYMBOL_NAME_MAX_SIZE 10
 
 
 // ERROR

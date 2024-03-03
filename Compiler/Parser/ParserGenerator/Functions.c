@@ -37,7 +37,7 @@ void first_helper(int symbol, AVLNode *node, AVLNode *root, intDynArrPtr arr, ch
     }
 }
 
-void first(int symbol, AVLNode *node, intDynArrPtr arr, short numOfSymbols)
+void calculate_first(int symbol, AVLNode *node, intDynArrPtr arr, short numOfSymbols)
 {
     char *membership;
     membership = calloc(numOfSymbols, sizeof(char)); // create an empty membership array
@@ -50,5 +50,123 @@ void first(int symbol, AVLNode *node, intDynArrPtr arr, short numOfSymbols)
     first_helper(symbol, node, node, arr, membership); // call the recursive function
 
     free(membership);
+}
 
+
+intDynArrPtr* calculate_firsts(AVLNode *node, short numOfSymbols)
+{
+    intDynArrPtr* result = calloc(numOfSymbols, sizeof(intDynArrPtr));
+    if (result==NULL)
+    {
+        report_error(ERR_INTERNAL, -1, "FAILED MEMORY ALLOCATION");
+    }
+    for (int i =0; i < numOfSymbols; i++)
+    {
+        result[i] = init_int_dynamic_array();
+        calculate_first(i, node, result[i], numOfSymbols);
+    }
+    return result;
+}
+
+// add all relevant FIRST sets to the appropriate symbols' FOLLOW set in the membership array and 'track' the
+// symbols at the end of rules' bodies
+void follows_helper_firsts(AVLNode *curr, char* membership_arr, intDynArrPtr* first_sets, short numOfSymbols,
+                           intDynArrPtr tracking)
+{
+    if (curr==NULL) {return;} // null guard
+
+    int size = curr->data->bodySize;
+    int* body = curr->data->body;
+
+
+    for (int i=0; i<size-1; i++) // iterate over the rule's body except for the final symbol
+    {
+        intDynArrPtr first_set = first_sets[body[i+1]]; // get the FIRST set of the following symbol
+
+        // set all the symbols from the set in the membership array
+        for(int j=0; j<first_set->array_size; j++)
+        {
+            membership_arr[body[i]*numOfSymbols+ first_set->array[j]] = 1;
+        }
+    }
+
+    // save the final symbol in the body, and the head into the tracking array to properly update associations later
+    add_to_int_dyn_array(tracking, body[size-1]);  // first add the final symbol in the body
+    add_to_int_dyn_array(tracking, curr->data->head); // and then add the head
+
+    // recurse all the way down the production rule AVL tree
+    follows_helper_firsts(curr->right, membership_arr, first_sets, numOfSymbols, tracking);
+    follows_helper_firsts(curr->left, membership_arr, first_sets, numOfSymbols, tracking);
+}
+
+// finish updating the membership array for any tracking symbols that were set in the first helper function
+void follows_helper_tracking(char* membership_arr, short numOfSymbols, intDynArrPtr tracking)
+{
+    char changed = 1; // check if a change has occurred
+    while (changed)
+    {
+        changed = 0;
+        // iterate over the tracking array 2 items at a time (since it is built like FOLLOW[i] contains FOLLOW[i+1]
+        for(int i = 0; i<tracking->array_size; i+=2)
+        {
+            for(int j = 0; j<numOfSymbols; j++) // iterate over all symbols
+            {
+                // if the symbol is set in the membership array for the 'tracked' symbol
+                if(membership_arr[tracking->array[i+1]*numOfSymbols+j])
+                    // if the symbol is NOT set in the membership array for the 'tracking' symbol
+                    if(!membership_arr[tracking->array[i]*numOfSymbols+j])
+                    {
+                        // set the symbol in the membership array for the 'tracking' symbol and update the changed
+                        // condition
+                        membership_arr[tracking->array[i]*numOfSymbols+j] =1;
+                        changed = 1;
+                    }
+            }
+        }
+    }
+}
+
+// return an array of dynamic arrays where the index corresponds to a symbol ID
+intDynArrPtr* calculate_follows(AVLNode *node, short numOfSymbols, intDynArrPtr* first_sets)
+{
+    // potential improvement: refactor to have the 2d array have each bit represent a symbol instead of each byte
+    // unnecessary due to the fact this extra memory overhead will only be present for the generation of the tables,
+    // so I chose code readability and development time over memory efficiency
+    char* membership_arr = calloc(numOfSymbols*numOfSymbols, sizeof(char));
+    if (membership_arr==NULL)
+    {
+        report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE MEMORY");
+        return NULL;
+    }
+
+    membership_arr[(TOKEN_COUNT+SYMBOL_START)*numOfSymbols+ TOKEN_EOF] = 1; // the start symbol always has an
+    // endmarker in the follow
+
+    intDynArrPtr tracking = init_int_dynamic_array(); // init the tracking array
+
+    // add all the firsts to follow sets, except for symbols at the end of production rules' body
+    follows_helper_firsts(node, membership_arr, first_sets, numOfSymbols, tracking);
+    // fix the follow sets for the symbols at the end of production rules' body
+    follows_helper_tracking(membership_arr, numOfSymbols, tracking);
+
+    // set up the result based on the membership table
+    intDynArrPtr* result = calloc(numOfSymbols, sizeof(intDynArrPtr));
+    if (result==NULL)
+    {
+        report_error(ERR_INTERNAL, -1, "FAILED MEMORY ALLOCATION");
+    }
+    for (int i = 0; i < numOfSymbols; i++)
+    {
+        // set up a dynamic array
+        result[i] = init_int_dynamic_array();
+        for(int j = 0; j<numOfSymbols; j++) // add all symbols present in the membership table to the array
+        {
+            if(membership_arr[i*numOfSymbols+j])
+                add_to_int_dyn_array(result[i], j);
+        }
+    }
+    // free resources
+    free(membership_arr);
+    delete_int_dynamic_array(tracking);
+    return result;
 }

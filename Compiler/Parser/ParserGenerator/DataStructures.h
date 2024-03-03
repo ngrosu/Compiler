@@ -67,6 +67,9 @@ typedef struct DynamicArray
 // initialize an int dynamic array
 intDynArrPtr init_int_dynamic_array();
 
+// delete an int dynamic array
+void delete_int_dynamic_array(intDynArrPtr arr);
+
 // add an integer to the dynamic array
 void add_to_int_dyn_array(intDynArrPtr arr, int num);
 

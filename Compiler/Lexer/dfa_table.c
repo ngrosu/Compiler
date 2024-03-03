@@ -83,7 +83,7 @@ bool allocate_states(DFA dfa, StatesInt new_amount)
     if (dfa->num_of_states<new_amount) // check that you are adding MORE states
     {
 
-        temp = realloc(dfa->states, (new_amount)*sizeof(TokenType)); // realloc states array
+        temp = realloc(dfa->states, (new_amount)*sizeof(TokenType)); // re-alloc states array
         if (!temp)  // check for successful allocation
         { return false; }
         dfa->states = temp;

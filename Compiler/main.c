@@ -27,12 +27,18 @@ int main()
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, arr3, 3, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_INT_LITERAL, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_IDENTIFIER, 0));
-    intDynArrPtr test = init_int_dynamic_array();
-    first(TOKEN_COUNT+SYMBOL_EXPRESSION, root, test, TOKEN_COUNT+SYMBOL_COUNT);
-    for (int i=0; i<test->array_size; i++)
+    intDynArrPtr *test = calculate_firsts(root, TOKEN_COUNT+SYMBOL_COUNT-1);
+    intDynArrPtr *test2 = calculate_follows(root, TOKEN_COUNT+SYMBOL_COUNT-1, test);
+    for(int j=TOKEN_COUNT; j<TOKEN_COUNT+SYMBOL_COUNT-1; j++)
     {
-        printf("%s, ", get_symbol_name(test->array[i]));
+        if(test2[j]->array_size!=0) {
+            printf("%s: ", get_symbol_name(j));
+            for (int i = 0; i < test2[j]->array_size; i++) {
+                printf("%s, ", get_symbol_name(test2[j]->array[i]));
+            }
+            printf("\n");
+        }
     }
-    printf("\n");
+
     pre_order(root);
 }

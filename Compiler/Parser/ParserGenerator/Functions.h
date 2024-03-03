@@ -10,7 +10,22 @@ void first_helper(int symbol, AVLNode *node, AVLNode *root, intDynArrPtr arr, ch
 // get an AVL tree of the production rules, a dynamic array to store the values, and an empty membership array the size
 // of the amount of possible symbols
 
-void first(int symbol, AVLNode *node, intDynArrPtr arr, short numOfSymbols); // set up a membership array for symbols
+void calculate_first(int symbol, AVLNode *node, intDynArrPtr arr, short numOfSymbols); // set up a membership array for symbols
 // and call first_helper with the array to find the FIRST() of the symbol
+
+//return an array of all symbols' FIRST with the index being the ID
+intDynArrPtr* calculate_firsts(AVLNode *node, short numOfSymbols);
+
+
+// add all relevant FIRST sets to the appropriate symbols' FOLLOW set in the membership array and 'track' the
+// symbols at the end of rules' bodies
+void follows_helper_firsts(AVLNode *curr, char* membership_arr, intDynArrPtr* first_sets, short numOfSymbols,
+                           intDynArrPtr tracking);
+
+// finish updating the membership array for any tracking symbols that were set in the first helper function
+void follows_helper_tracking(char* membership_arr, short numOfSymbols, intDynArrPtr tracking);
+
+// return an array of dynamic arrays where the index corresponds to a symbol ID
+intDynArrPtr* calculate_follows(AVLNode *node, short numOfSymbols, intDynArrPtr* first_sets);
 
 #endif //COMPILER_FUNCTIONS_H

@@ -216,6 +216,12 @@ intDynArrPtr init_int_dynamic_array()
     return arr;
 }
 
+void delete_int_dynamic_array(intDynArrPtr arr)
+{
+    free(arr->array);
+    free(arr);
+}
+
 void add_to_int_dyn_array(intDynArrPtr arr, int num)
 { // add an integer to the dynamic array
     if (arr->array_size +1 > arr->array_capacity ) { // check if the array is too small
