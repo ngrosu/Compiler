@@ -3,7 +3,6 @@
 //
 
 #include "symbol.h"
-#include <stdlib.h>
 
 
 
@@ -16,7 +15,6 @@ const char* get_symbol_name(int symbol)
     SymbolType tempID = symbol-TOKEN_COUNT;
     switch (tempID)
     {
-
         case SYMBOL_EXPRESSION:
             return "Expr";
         case SYMBOL_TERM:
@@ -24,7 +22,11 @@ const char* get_symbol_name(int symbol)
         case SYMBOL_FACTOR:
             return "Fact";
         case SYMBOL_COUNT:
-            return "ERROR";
+            return "ERROR(COUNT SYMBOL)";
+        default:
+            return "INVALID";
+        case SYMBOL_START:
+            return "START";
     }
 }
 
