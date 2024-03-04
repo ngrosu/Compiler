@@ -56,11 +56,23 @@ AVLNode* find(AVLNode* root, ProdRule data); // find in AVL tree
 
 AVLNode* find_head(AVLNode* root, int symbol); //  find node whose head is a certain symbol
 
-void pre_order(AVLNode* root); // print AVL tree in order
+void in_order(AVLNode* root); // print AVL tree in order
+
+typedef struct TreeIterator
+{
+    struct Stack* stack;
+    AVLNode* current_node;
+} TreeIterator;
+
+TreeIterator* init_tree_iterator(AVLNode* root);
+
+int iterator_is_empty(TreeIterator* iter);
+
+ProdRule iterator_next(TreeIterator* iter);
 
 // Dynamic Array
 
-typedef struct DynamicArray
+typedef struct intDynamicArray
 {
     int array_size;
     int array_capacity;
@@ -75,6 +87,23 @@ void delete_int_dynamic_array(intDynArrPtr arr);
 
 // add an integer to the dynamic array
 void add_to_int_dyn_array(intDynArrPtr arr, int num);
+
+typedef struct setDynamicArray
+{
+    int array_size;
+    int array_capacity;
+    AVLNode** array;
+} *setDynArrPtr,setDynArr;
+
+// initialize an set dynamic array
+setDynArrPtr init_set_dynamic_array();
+
+// delete an set dynamic array
+void delete_set_dynamic_array(setDynArrPtr arr);
+
+// add an integer to the dynamic array
+void add_to_set_dyn_array(setDynArrPtr arr, AVLNode* set);
+
 
 // Linked List
 

@@ -27,6 +27,8 @@ const char* get_symbol_name(int symbol)
             return "INVALID";
         case SYMBOL_START:
             return "START";
+        case SYMBOL_START_TAG:
+            return "START_TAG";
     }
 }
 

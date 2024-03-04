@@ -71,6 +71,7 @@ typedef enum {
     SYMBOL_TERM,
     SYMBOL_FACTOR,
     SYMBOL_START,
+    SYMBOL_START_TAG,
     SYMBOL_COUNT // stores the amount of array in SymbolType
 } SymbolType;
 // PARSER

@@ -14,7 +14,7 @@ void calculate_first(int symbol, AVLNode *node, intDynArrPtr arr, short numOfSym
 // and call first_helper with the array to find the FIRST() of the symbol
 
 //return an array of all symbols' FIRST with the index being the ID
-intDynArrPtr* calculate_firsts(AVLNode *node, short numOfSymbols);
+intDynArrPtr* calculate_firsts(AVLNode *grammar, short numOfSymbols);
 
 
 // add all relevant FIRST sets to the appropriate symbols' FOLLOW set in the membership array and 'track' the
@@ -29,6 +29,10 @@ void follows_helper_tracking(char* membership_arr, short numOfSymbols, intDynArr
 intDynArrPtr* calculate_follows(AVLNode *node, short numOfSymbols, intDynArrPtr* first_sets);
 
 // modify the set to be CLOSURE(set)
-AVLNode* closure(AVLNode* root, AVLNode* set, intDynArrPtr* first_sets);
+AVLNode* closure(AVLNode* grammar, AVLNode* set, intDynArrPtr* first_sets);
+
+AVLNode* goto_func(AVLNode* root, AVLNode* set, intDynArrPtr* first_sets, int symbol);
+
+AVLNode** generate_items(AVLNode* grammar);
 
 #endif //COMPILER_FUNCTIONS_H

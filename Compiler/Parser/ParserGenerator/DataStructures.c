@@ -207,25 +207,56 @@ AVLNode* find_head(AVLNode* root, int symbol) // find node whose head is a certa
         return root;
 }
 
-void pre_order(AVLNode *root)
+void in_order(AVLNode *root)
 {
     if(root != NULL)
     {
+        in_order(root->right);
         printf("%s=>", get_symbol_name(root->data->head));
         for(int i=0; i<root->data->bodySize; i++)
         {
             printf("%s ", get_symbol_name(root->data->body[i]));
         }
-        printf("\n");
+        printf("| %s \n", get_symbol_name(root->data->lookahead));
         //printf("%d, ", root->data->head);
-        pre_order(root->left);
-        pre_order(root->right);
+        in_order(root->left);
     }
+}
+
+TreeIterator* init_tree_iterator(AVLNode* root)
+{
+    TreeIterator* iter = malloc(sizeof(TreeIterator));
+    if (iter==NULL)
+    {
+        report_error(ERR_INTERNAL, -1, "FAILED MEMORY ALLOCATION");
+        return NULL;
+    }
+    iter->stack = init_stack();
+    iter->current_node = root;
+    return iter;
+}
+
+int iterator_is_empty(TreeIterator* iter) {
+    return iter->stack->content == NULL && iter->current_node == NULL;
+}
+
+ProdRule iterator_next(TreeIterator* iter) {
+    while (iter->current_node != NULL)
+    {
+        push(iter->stack, iter->current_node);
+        iter->current_node = iter->current_node->left;
+    }
+
+    iter->current_node = pop(iter->stack);
+    AVLNode* node = iter->current_node;
+    iter->current_node = iter->current_node->right;
+
+    return node->data;
 }
 
 // Symbol
 
-
+// Dynamic Array
 
 intDynArrPtr init_int_dynamic_array()
 { // initialize an int dynamic array
@@ -258,6 +289,42 @@ void add_to_int_dyn_array(intDynArrPtr arr, int num)
         arr->array_size++;
 
 }
+
+
+setDynArrPtr init_set_dynamic_array()
+{ // initialize a set dynamic array
+    setDynArrPtr arr = malloc(sizeof(setDynArr));
+    arr->array_capacity=1;
+    arr->array = malloc(sizeof(AVLNode**));
+    arr->array_size=0;
+    return arr;
+}
+
+
+// delete an set dynamic array
+void delete_set_dynamic_array(setDynArrPtr arr)
+{ // DOES NOT FREE THE STRUCTS IN THE ARRAY
+    free(arr->array);
+    free(arr);
+}
+
+
+void add_to_set_dyn_array(setDynArrPtr arr, AVLNode* set)
+{ // add a set to the dynamic array
+    if (arr->array_size +1 > arr->array_capacity ) { // check if the array is too small
+        void *temp = realloc(arr->array, sizeof(AVLNode**) * arr->array_capacity * 2); //increase arr size
+        if (temp == NULL) {
+            report_error(ERR_INTERNAL, -1, "FAILED MEMORY ALLOCATION");
+            return;
+        }
+        arr->array_capacity *= 2; // update array size
+        arr->array = temp;
+    }
+    // add int to array
+    arr->array[arr->array_size] = set;
+    arr->array_size++;
+}
+
 
 // Linked List
 LinkedList* create_linked_list_node(void* data, LinkedList* next)
@@ -298,7 +365,7 @@ Stack* init_stack()
 // push an item onto the stack
 void push(Stack* stack, void* data)
 {
-    create_linked_list_node(data, stack->content);
+    stack->content = create_linked_list_node(data, stack->content);
 }
 
 // pop from the stack
@@ -308,6 +375,7 @@ void* pop(Stack* stack)
     LinkedList* next = stack->content->next;
     free(stack->content);
     stack->content=next;
+
     return data;
 }
 

@@ -18,7 +18,6 @@ void first_helper(int symbol, AVLNode *node, AVLNode *root, intDynArrPtr arr, ch
     }
     else // if non-terminal
     {
-
         AVLNode* temp = find_head(node, symbol); // get the first node which has a production rule's head be the
         // symbol
         if (temp==NULL)
@@ -53,7 +52,7 @@ void calculate_first(int symbol, AVLNode *node, intDynArrPtr arr, short numOfSym
 }
 
 
-intDynArrPtr* calculate_firsts(AVLNode *node, short numOfSymbols)
+intDynArrPtr* calculate_firsts(AVLNode *grammar, short numOfSymbols)
 {
     intDynArrPtr* result = calloc(numOfSymbols, sizeof(intDynArrPtr));
     if (result==NULL)
@@ -63,7 +62,7 @@ intDynArrPtr* calculate_firsts(AVLNode *node, short numOfSymbols)
     for (int i =0; i < numOfSymbols; i++)
     {
         result[i] = init_int_dynamic_array();
-        calculate_first(i, node, result[i], numOfSymbols);
+        calculate_first(i, grammar, result[i], numOfSymbols);
     }
     return result;
 }
@@ -171,77 +170,135 @@ intDynArrPtr* calculate_follows(AVLNode *node, short numOfSymbols, intDynArrPtr*
     return result;
 }
 
-// modify the set to be CLOSURE(set) and return a pointer to the root of the set
-AVLNode* closure(AVLNode* root, AVLNode* set, intDynArrPtr* first_sets)
+// modify the set to be CLOSURE(set) and return a pointer to the grammar of the set
+AVLNode* closure(AVLNode* grammar, AVLNode* set, intDynArrPtr* first_sets)
 {
-    Stack* outer_loop_stack = init_stack();
-    AVLNode* outer_loop_current;
-    Stack* inner_loop_stack = init_stack();
-    AVLNode* inner_loop_current;
+    TreeIterator* iter_set;
+    TreeIterator* iter_root;
+
 
     intDynArrPtr first;
     ProdRule new_rule;
 
     char change = 1;
 
-    AVLNode* set_pr_node; // set production rule node
-    AVLNode* root_pr_node; // root production rule node
+    ProdRule set_rule; // set production rule node
+    ProdRule root_rule; // grammar production rule node
     while(change)
     {
+        iter_set = init_tree_iterator(set);
         change = 0;
-        outer_loop_current = set; // loop over the set
-        while (outer_loop_current != NULL || outer_loop_stack->content != NULL) // NULL comparison for better clarity
+        while (!iterator_is_empty(iter_set))
         {
-            push(outer_loop_stack, outer_loop_current); // tree traversal logic
-            outer_loop_current = outer_loop_current->left;
+            set_rule = iterator_next(iter_set);
+            // perform action on tree node
 
-            if (outer_loop_current == NULL && outer_loop_stack->content != NULL) {
-                set_pr_node = (AVLNode *) pop(outer_loop_stack);
-                outer_loop_current = set_pr_node->right;
-                // perform action on tree node
+            if (set_rule->body[set_rule->dot] >= TOKEN_COUNT)
+            { // if the item after the dot is a
+                // non-terminal go into the inner loop
+                iter_root = init_tree_iterator(grammar);
+                while (!iterator_is_empty(iter_root))
+                { // iterate over the grammar tree (main grammar rules)
+                    root_rule = iterator_next(iter_root);
 
-                if (set_pr_node->data->body[set_pr_node->data->dot] >= TOKEN_COUNT) { // if the item after the dot is a
-                    // non-terminal go into the inner loop
-                    inner_loop_current = root; // loop over the root
-                    while (inner_loop_current != NULL || inner_loop_stack != NULL) // again, NULL comparison for
-                    { // better clarity
-                        // iterate over the root tree (main grammar rules)
-                        push(inner_loop_stack, inner_loop_current);
-                        inner_loop_current = inner_loop_current->left;
-
-                        if (inner_loop_current == NULL && inner_loop_stack->content != NULL) { // tree traversal logic
-                            root_pr_node = (AVLNode *) pop(inner_loop_stack);
-                            inner_loop_current = root_pr_node->right;
-
-                            // check if the found prod rule's head is the non-terminal after the dot
-                            if (root_pr_node->data->head == set_pr_node->data->body[set_pr_node->data->dot]) {
-                                if (set_pr_node->data->dot ==
-                                    set_pr_node->data->bodySize - 1) // if dot is just before the
-                                {                                    // end of the body
-                                    insert(root, init_LR1_item(root_pr_node->data->head, root_pr_node->data->body,
-                                                               root_pr_node->data->bodySize, 0,
-                                                               set_pr_node->data->lookahead));
-                                } else {
-                                    first = first_sets[set_pr_node->data->body[set_pr_node->data->dot + 1]];
-                                    for (int i = 0; i < first->array_size; i++) {
-                                        // add the symbol after the symbol that's after the dot's first set as lookahead
-                                        new_rule= init_LR1_item(root_pr_node->data->head, root_pr_node->data->body,
-                                                                   root_pr_node->data->bodySize, 0,first->array[i]);
-                                        if (!find(set, new_rule)) // if the rule doesn't already exist
-                                        {
-                                            change=1;
-                                            set = insert(set, new_rule); // add the new rule to the set
-                                        }
-                                    }
+                    // check if the found prod rule's head is the non-terminal after the dot
+                    if (root_rule->head == set_rule->body[set_rule->dot])
+                    {
+                        if (set_rule->dot == set_rule->bodySize - 1)
+                        {// if dot is just before the end of the body
+                            // insert the rule into the set
+                            ProdRule item = init_LR1_item(root_rule->head, root_rule->body, root_rule->bodySize,
+                                                          0, set_rule->lookahead);
+                            if (!find(set, item))
+                            {
+                                change = 1;
+                                set = insert(set, init_LR1_item(root_rule->head, root_rule->body, root_rule->bodySize,
+                                                                0, set_rule->lookahead));
+                            }
+                            else {free(item);}
+                        } else
+                        {
+                            // add the symbol after the symbol that's after the dot's first set as lookahead
+                            first = first_sets[set_rule->body[set_rule->dot + 1]];
+                            for (int i = 0; i < first->array_size; i++)
+                            {
+                                new_rule = init_LR1_item(root_rule->head, root_rule->body,
+                                                         root_rule->bodySize, 0, first->array[i]);
+                                if (!find(set, new_rule)) // if the rule doesn't already exist
+                                {
+                                    change = 1;
+                                    set = insert(set, new_rule); // add the new rule to the set
                                 }
                             }
                         }
-                    } // end of inner loop
+                    }
                 }
-
+                free(iter_root->stack);
+                free(iter_root);
             }
-        } // end of outer loop
+        } // end of inner loop
+        free(iter_set->stack);
+        free(iter_set);
+    } // end of outer loop
+        return set;
     } // end of wrapping loop (main while)
 
-    return set;
+
+
+AVLNode* goto_helper(AVLNode* set, AVLNode* result, int symbol)
+{
+    if (set==NULL) {return result;}
+
+    ProdRule data = set->data;
+    if (data->dot != data->bodySize) // make sure the dot is not at the end of the rule
+    {
+        if (data->body[data->dot] == symbol) // if the symbol after the dot matches
+        {
+            // advance the dot by 1 and add to the new set
+            result = insert(result, init_LR1_item(data->head, data->body, data->bodySize,
+                                                  (short)(data->dot+1), data->lookahead));
+        }
+    }
+    // repeat for entire tree
+    result = goto_helper(set->left, result, symbol);
+    result = goto_helper(set->right, result, symbol);
+
+    return result;
 }
+
+AVLNode* goto_func(AVLNode* root, AVLNode* set, intDynArrPtr* first_sets, int symbol)
+{
+    AVLNode* result = NULL;
+    result = goto_helper(set, result, symbol); // generate the goto set
+    return closure(root, result, first_sets);
+}
+
+AVLNode** generate_items(AVLNode* grammar)
+{
+    void* temp = malloc(sizeof(int));
+    if(temp==NULL){
+        report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE MEMORY");
+        return NULL;
+    }
+
+    // augment the grammar to have S` -> S, $
+    *(int*)temp = SYMBOL_START;
+    ProdRule augmented_start = init_LR1_item(SYMBOL_START_TAG, (int*)temp, 1, 0, TOKEN_EOF);
+    free(temp);
+    grammar = insert(grammar, augmented_start);
+
+    // calculate first sets
+    intDynArrPtr* first_sets = calculate_firsts(grammar, TOKEN_COUNT+SYMBOL_COUNT-1);
+
+    // initialize a dynamic array to store the sets
+    setDynArrPtr setArr = init_set_dynamic_array();
+    add_to_set_dyn_array(setArr, closure(grammar, insert(NULL, augmented_start), first_sets));
+
+    // create items
+    for(int i = 0; i< setArr->array_size; i++)
+    {
+
+    }
+
+}
+
