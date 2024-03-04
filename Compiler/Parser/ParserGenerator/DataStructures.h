@@ -56,6 +56,8 @@ AVLNode* find(AVLNode* root, ProdRule data); // find in AVL tree
 
 AVLNode* find_head(AVLNode* root, int symbol); //  find node whose head is a certain symbol
 
+char trees_is_equal(AVLNode* a, AVLNode* b); // check if two trees are equal
+
 void in_order(AVLNode* root); // print AVL tree in order
 
 typedef struct TreeIterator

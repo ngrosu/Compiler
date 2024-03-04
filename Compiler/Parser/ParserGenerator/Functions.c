@@ -273,7 +273,7 @@ AVLNode* goto_func(AVLNode* root, AVLNode* set, intDynArrPtr* first_sets, int sy
     return closure(root, result, first_sets);
 }
 
-AVLNode** generate_items(AVLNode* grammar)
+setDynArrPtr generate_items(AVLNode* grammar)
 {
     void* temp = malloc(sizeof(int));
     if(temp==NULL){
@@ -295,10 +295,34 @@ AVLNode** generate_items(AVLNode* grammar)
     add_to_set_dyn_array(setArr, closure(grammar, insert(NULL, augmented_start), first_sets));
 
     // create items
-    for(int i = 0; i< setArr->array_size; i++)
+    char change = 1;
+    while(change)
     {
-
+        change = 0;
+        for (int i = 0; i < setArr->array_size; i++)
+        {
+            for (int symbol = 0; symbol < TOKEN_COUNT + SYMBOL_COUNT - 1; symbol++)
+            {
+                AVLNode *tempgoto = goto_func(grammar, setArr->array[i], first_sets, symbol);
+                if (tempgoto != NULL)
+                {
+                    char check = 0;
+                    for (int j = 0; j < i && !check; j++)
+                    {
+                        if (trees_is_equal(tempgoto, setArr->array[j]))
+                        {
+                            check = 1;
+                        }
+                    }
+                    if (!check)
+                    {
+                        change=1;
+                        add_to_set_dyn_array(setArr, tempgoto);
+                    }
+                }
+            }
+        }
     }
-
+    return setArr;
 }
 

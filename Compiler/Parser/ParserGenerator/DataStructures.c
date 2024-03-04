@@ -212,12 +212,15 @@ void in_order(AVLNode *root)
     if(root != NULL)
     {
         in_order(root->right);
-        printf("%s=>", get_symbol_name(root->data->head));
+        int sum =0;
+        sum += printf("%-6s=> ", get_symbol_name(root->data->head));
         for(int i=0; i<root->data->bodySize; i++)
         {
-            printf("%s ", get_symbol_name(root->data->body[i]));
+            if(i==root->data->dot)
+                {sum += printf("• ");}
+            sum +=printf("%s ", get_symbol_name(root->data->body[i]));
         }
-        printf("| %s \n", get_symbol_name(root->data->lookahead));
+        printf("%*s| %s \n", 40-sum, "", get_symbol_name(root->data->lookahead));
         //printf("%d, ", root->data->head);
         in_order(root->left);
     }
@@ -252,6 +255,29 @@ ProdRule iterator_next(TreeIterator* iter) {
     iter->current_node = iter->current_node->right;
 
     return node->data;
+}
+
+char trees_is_equal(AVLNode* a, AVLNode* b)
+{
+    TreeIterator* iterA = init_tree_iterator(a);
+    TreeIterator* iterB = init_tree_iterator(b);
+    int cmp=0;
+    while(!iterator_is_empty(iterA) && !iterator_is_empty(iterB) && cmp==0)
+    {
+        cmp = compare_prod_rules(iterator_next(iterA), iterator_next(iterB));
+    }
+    if(!iterator_is_empty(iterA) || !iterator_is_empty(iterB))
+    {
+        free(iterA->stack);
+        free(iterB->stack);
+        free(iterA);
+        free(iterB);
+        return 0;}
+    free(iterA->stack);
+    free(iterB->stack);
+    free(iterA);
+    free(iterB);
+    return 1;
 }
 
 // Symbol

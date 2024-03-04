@@ -33,6 +33,6 @@ AVLNode* closure(AVLNode* grammar, AVLNode* set, intDynArrPtr* first_sets);
 
 AVLNode* goto_func(AVLNode* root, AVLNode* set, intDynArrPtr* first_sets, int symbol);
 
-AVLNode** generate_items(AVLNode* grammar);
+setDynArrPtr generate_items(AVLNode* grammar);
 
 #endif //COMPILER_FUNCTIONS_H

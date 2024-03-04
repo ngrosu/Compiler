@@ -37,6 +37,7 @@ int main()
     temp[0] = TOKEN_COUNT+SYMBOL_START;
     AVLNode* clos = closure(root, insert(NULL, init_LR1_item(TOKEN_COUNT+SYMBOL_START_TAG, temp, 1, 0, TOKEN_EOF)),
                             test);
+    AVLNode* got = goto_func(root, clos, test, TOKEN_IDENTIFIER);
 
 //    intDynArrPtr *test2 = calculate_follows(root, TOKEN_COUNT+SYMBOL_COUNT-1, test);
     for(int j=TOKEN_COUNT; j<TOKEN_COUNT+SYMBOL_COUNT-1; j++)
@@ -50,5 +51,6 @@ int main()
         }
     }
 
-    in_order(clos);
+    printf("\n");
+    in_order(got);
 }
