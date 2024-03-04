@@ -170,3 +170,78 @@ intDynArrPtr* calculate_follows(AVLNode *node, short numOfSymbols, intDynArrPtr*
     delete_int_dynamic_array(tracking);
     return result;
 }
+
+// modify the set to be CLOSURE(set) and return a pointer to the root of the set
+AVLNode* closure(AVLNode* root, AVLNode* set, intDynArrPtr* first_sets)
+{
+    Stack* outer_loop_stack = init_stack();
+    AVLNode* outer_loop_current;
+    Stack* inner_loop_stack = init_stack();
+    AVLNode* inner_loop_current;
+
+    intDynArrPtr first;
+    ProdRule new_rule;
+
+    char change = 1;
+
+    AVLNode* set_pr_node; // set production rule node
+    AVLNode* root_pr_node; // root production rule node
+    while(change)
+    {
+        change = 0;
+        outer_loop_current = set; // loop over the set
+        while (outer_loop_current != NULL || outer_loop_stack->content != NULL) // NULL comparison for better clarity
+        {
+            push(outer_loop_stack, outer_loop_current); // tree traversal logic
+            outer_loop_current = outer_loop_current->left;
+
+            if (outer_loop_current == NULL && outer_loop_stack->content != NULL) {
+                set_pr_node = (AVLNode *) pop(outer_loop_stack);
+                outer_loop_current = set_pr_node->right;
+                // perform action on tree node
+
+                if (set_pr_node->data->body[set_pr_node->data->dot] >= TOKEN_COUNT) { // if the item after the dot is a
+                    // non-terminal go into the inner loop
+                    inner_loop_current = root; // loop over the root
+                    while (inner_loop_current != NULL || inner_loop_stack != NULL) // again, NULL comparison for
+                    { // better clarity
+                        // iterate over the root tree (main grammar rules)
+                        push(inner_loop_stack, inner_loop_current);
+                        inner_loop_current = inner_loop_current->left;
+
+                        if (inner_loop_current == NULL && inner_loop_stack->content != NULL) { // tree traversal logic
+                            root_pr_node = (AVLNode *) pop(inner_loop_stack);
+                            inner_loop_current = root_pr_node->right;
+
+                            // check if the found prod rule's head is the non-terminal after the dot
+                            if (root_pr_node->data->head == set_pr_node->data->body[set_pr_node->data->dot]) {
+                                if (set_pr_node->data->dot ==
+                                    set_pr_node->data->bodySize - 1) // if dot is just before the
+                                {                                    // end of the body
+                                    insert(root, init_LR1_item(root_pr_node->data->head, root_pr_node->data->body,
+                                                               root_pr_node->data->bodySize, 0,
+                                                               set_pr_node->data->lookahead));
+                                } else {
+                                    first = first_sets[set_pr_node->data->body[set_pr_node->data->dot + 1]];
+                                    for (int i = 0; i < first->array_size; i++) {
+                                        // add the symbol after the symbol that's after the dot's first set as lookahead
+                                        new_rule= init_LR1_item(root_pr_node->data->head, root_pr_node->data->body,
+                                                                   root_pr_node->data->bodySize, 0,first->array[i]);
+                                        if (!find(set, new_rule)) // if the rule doesn't already exist
+                                        {
+                                            change=1;
+                                            set = insert(set, new_rule); // add the new rule to the set
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } // end of inner loop
+                }
+
+            }
+        } // end of outer loop
+    } // end of wrapping loop (main while)
+
+    return set;
+}

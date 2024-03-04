@@ -16,8 +16,24 @@ ProdRule init_prod_rule(int head, const int* body, short bodySize, short dot) //
     }
     rule->bodySize = bodySize;
     rule->dot = dot;
+    rule->lookahead = 0;
     return rule;
 }
+
+ProdRule init_LR1_item(int head, const int* body, short bodySize, short dot, int lookahead) // init a prod rule
+{
+    ProdRule rule = malloc(sizeof(ProdRuleStruct)); // allocate space for rule
+    rule->head = head;
+    for(int i=0; i<bodySize; i++)
+    {
+        rule->body[i] = body[i];
+    }
+    rule->bodySize = bodySize;
+    rule->dot = dot;
+    rule->lookahead = lookahead;
+    return rule;
+}
+
 ProdRule init_short_prod_rule(int head, int body, short dot) // init a prod rule with a single symbol body
 {
     ProdRule rule = malloc(sizeof(ProdRuleStruct)); // allocate space for rule
@@ -49,6 +65,10 @@ short compare_prod_rules(ProdRule a, ProdRule b) // compare two production rules
                 // If contents are equal, compare the dot locations
                 if (a->dot < b->dot) return -1;
                 else if (a->dot > b->dot) return 1;
+
+                    // If dots are equal compare lookahead (only relevant for items)
+                    if(a->lookahead < b->lookahead) return -1;
+                    else if (a->lookahead > b->lookahead) return 1;
 
     return 0;
 }
@@ -160,7 +180,7 @@ AVLNode* insert(AVLNode* root, ProdRule data)
 AVLNode* find(AVLNode* root, ProdRule data)
 {
     if (root == NULL)
-        return root;
+        return NULL;
 
     short cmp = compare_prod_rules(data, root->data);
     // normal BST navigation
@@ -238,3 +258,56 @@ void add_to_int_dyn_array(intDynArrPtr arr, int num)
         arr->array_size++;
 
 }
+
+// Linked List
+LinkedList* create_linked_list_node(void* data, LinkedList* next)
+{
+    LinkedList* result = malloc(sizeof(LinkedList));
+    if(result==NULL)
+    {
+        report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE MEMORY");
+        return NULL;
+    }
+
+    result->data = data;
+    result->next = next;
+    return result;
+}
+
+void delete_linked_list(void* del_func(void*), LinkedList* curr)
+{
+    LinkedList* next;
+    while(curr!=NULL)
+    {
+        next = curr->next;
+        del_func(curr->data);
+        free(curr);
+        curr=next;
+    }
+}
+
+// Stack
+
+Stack* init_stack()
+{
+    Stack* stack = malloc(sizeof(Stack));
+    stack->content = NULL;
+    return stack;
+}
+
+// push an item onto the stack
+void push(Stack* stack, void* data)
+{
+    create_linked_list_node(data, stack->content);
+}
+
+// pop from the stack
+void* pop(Stack* stack)
+{
+    void* data = stack->content->data;
+    LinkedList* next = stack->content->next;
+    free(stack->content);
+    stack->content=next;
+    return data;
+}
+

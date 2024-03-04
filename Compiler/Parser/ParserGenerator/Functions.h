@@ -28,4 +28,7 @@ void follows_helper_tracking(char* membership_arr, short numOfSymbols, intDynArr
 // return an array of dynamic arrays where the index corresponds to a symbol ID
 intDynArrPtr* calculate_follows(AVLNode *node, short numOfSymbols, intDynArrPtr* first_sets);
 
+// modify the set to be CLOSURE(set)
+AVLNode* closure(AVLNode* root, AVLNode* set, intDynArrPtr* first_sets);
+
 #endif //COMPILER_FUNCTIONS_H

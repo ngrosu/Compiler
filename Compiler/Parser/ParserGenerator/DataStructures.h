@@ -15,6 +15,7 @@ typedef struct {
     int body[MAX_RULE_SIZE];
     short bodySize;
     short dot;
+    int lookahead;
 } *ProdRule, ProdRuleStruct;
 
 //create new production rule
@@ -22,6 +23,9 @@ ProdRule init_prod_rule(int head, const int* body, short bodySize, short dot);
 
 // init a prod rule with a single symbol body
 ProdRule init_short_prod_rule(int head, int body, short dot);
+
+// init a prod rule with a lookahead symbol (LR1 item)
+ProdRule init_LR1_item(int head, const int* body, short bodySize, short dot, int lookahead); // init a prod rule
 
 // compare two production rules (for AVL), return -1 if a < b, 0 if equal, 1 if a > b
 short compare_prod_rules(ProdRule a, ProdRule b);
@@ -54,8 +58,7 @@ AVLNode* find_head(AVLNode* root, int symbol); //  find node whose head is a cer
 
 void pre_order(AVLNode* root); // print AVL tree in order
 
-// Symbol
-
+// Dynamic Array
 
 typedef struct DynamicArray
 {
@@ -72,5 +75,36 @@ void delete_int_dynamic_array(intDynArrPtr arr);
 
 // add an integer to the dynamic array
 void add_to_int_dyn_array(intDynArrPtr arr, int num);
+
+// Linked List
+
+typedef struct LinkedList
+{
+    void* data;
+    struct LinkedList* next;
+} LinkedList;
+
+LinkedList* create_linked_list_node(void* data, LinkedList* next);
+
+void delete_linked_list(void* del_func(void*), LinkedList* curr);
+
+// Stack
+
+typedef struct Stack
+{
+    LinkedList* content;
+} Stack;
+
+// initialize a stack
+Stack* init_stack();
+
+// push an item onto the stack
+void push(Stack* stack, void* data);
+
+// pop from the stack
+void* pop(Stack* stack);
+
+
+
 
 #endif //COMPILER_DATASTRUCTURES_H
