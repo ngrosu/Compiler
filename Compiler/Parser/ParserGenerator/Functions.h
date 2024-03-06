@@ -33,6 +33,10 @@ AVLNode* closure(AVLNode* grammar, AVLNode* set, intDynArrPtr* first_sets);
 
 AVLNode* goto_func(AVLNode* root, AVLNode* set, intDynArrPtr* first_sets, int symbol);
 
-setDynArrPtr generate_items(AVLNode* grammar);
+genDynArrPtr generate_items(AVLNode* grammar);
+
+AVLNode* init_grammar();
+
+void generate_parse_tables(unsigned int ***action_table, unsigned int ***goto_table, unsigned int *num_of_states);
 
 #endif //COMPILER_FUNCTIONS_H

@@ -62,6 +62,9 @@ void init_DFA(DFA dfa)
     add_symbol_token_to_DFA(dfa, "{", TOKEN_L_CURLY_B, START_STATE);
     add_symbol_token_to_DFA(dfa, "}", TOKEN_R_CURLY_B, START_STATE);
     add_symbol_token_to_DFA(dfa, ";", TOKEN_SEMICOLON, START_STATE);
+    add_symbol_token_to_DFA(dfa, "=", TOKEN_EQUAL, START_STATE);
+    add_symbol_token_to_DFA(dfa, "=", TOKEN_EQUAL_EQUAL_OP, dfa->num_of_states-1);
+
 
 
 

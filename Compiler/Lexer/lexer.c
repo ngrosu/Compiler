@@ -10,7 +10,7 @@ Lexer init_lexer(char* file_path)
     Lexer lexer = malloc(sizeof(LexerStruct));
     if (lexer == NULL)
     {
-        report_error(ERR_INTERNAL, -1, "Failed to allocate lexer");
+        report_error(ERR_INTERNAL, -1, "Failed to allocate lexer", NULL);
         exit(EXIT_FAILURE);
     }
     lexer->dfa = create_DFA();
@@ -18,7 +18,7 @@ Lexer init_lexer(char* file_path)
     init_DFA(lexer->dfa);  // initialize the DFA lookup table
     lexer->file = fopen(file_path, "r");
     if (lexer->file == NULL) {
-        report_error(ERR_INTERNAL, -1, "Failed to open file");
+        report_error(ERR_INTERNAL, -1, "Failed to open file", NULL);
         free(lexer); // Free the previously allocated memory
         exit(EXIT_FAILURE);
     }
@@ -53,7 +53,8 @@ void add_token(Lexer lexer, Token token)
         {lexer->tokens_allocated_size=1;}
         void* temp_ptr = realloc(lexer->tokens, (lexer->tokens_allocated_size*2)*sizeof(Token));
         if (!temp_ptr)
-        { report_error(ERR_INTERNAL, lexer->curr_line, "failed to allocate more *token space");
+        {
+            report_error(ERR_INTERNAL, lexer->curr_line, "failed to allocate more *token space", NULL);
             exit(EXIT_FAILURE);}
         lexer->tokens_allocated_size*=2;
         lexer->tokens = temp_ptr;
@@ -77,12 +78,12 @@ Token get_next_token(Lexer lexer)
             case 0:
             {
                 lexer->token_buffer[lexeme_length++] = (char)chr;
-                report_error(ERR_LEXICAL, lexer->curr_line, lexer->token_buffer);
-                return init_token(TOKEN_ERROR, lexer->token_buffer);
+                report_error(ERR_LEXICAL, lexer->curr_line, lexer->token_buffer, NULL);
+                return init_token(TOKEN_ERROR, lexer->token_buffer, lexer->curr_line);
             }
             case DELIMITER_STATE: {
                 ungetc(chr, lexer->file);
-                return init_token(lexer->dfa->states[state], lexer->token_buffer);
+                return init_token(lexer->dfa->states[state], lexer->token_buffer, lexer->curr_line);
 
             }
 
@@ -93,8 +94,8 @@ Token get_next_token(Lexer lexer)
         chr = fgetc(lexer->file);
     }
     if(state==START_STATE)
-    {return init_token(TOKEN_EOF, "");}
-    return init_token(lexer->dfa->states[state], lexer->token_buffer);
+    {return init_token(TOKEN_EOF, "", lexer->curr_line);}
+    return init_token(lexer->dfa->states[state], lexer->token_buffer, lexer->curr_line);
 }
 
 void print_tokens(Lexer lexer)
@@ -129,7 +130,7 @@ void tokenize(Lexer lexer)
 
         if(next_token->type == 0) // if it's a token error, report an error
         {
-            report_error(ERR_LEXICAL, lexer->curr_line, "Invalid Token/Unexpected character");
+            report_error(ERR_LEXICAL, lexer->curr_line, "Invalid Token/Unexpected character", NULL);
             exit(1); // exit_lexer()
         }
         add_token(lexer, next_token); // add the token to the lexer

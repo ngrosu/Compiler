@@ -10,9 +10,10 @@
 typedef struct {
     TokenType type;
     char* lexeme;
+    unsigned int line;
 } *Token, TokenStruct;
 
-Token init_token(TokenType, const char*);
+Token init_token(TokenType type, const char *lexeme, unsigned int line);
 
 void delete_token(Token); // delete a token
 

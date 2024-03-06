@@ -6,11 +6,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-Token init_token(TokenType type, const char* lexeme)
+Token init_token(TokenType type, const char *lexeme, unsigned int line)
 {
     Token token = malloc(sizeof(TokenStruct));
     token->type = type;
     token->lexeme = strdup(lexeme);
+    token->line = line;
     return token;
 }
 
@@ -90,8 +91,6 @@ char* get_token_name(TokenType type)
             return "EOF";
         case TOKEN_EQUAL:
             return "EQUAL";
-        case TOKEN_EQUAL_EQUAL:
-            return "EQUAL_EQUAL";
         case TOKEN_COMMENT:
             return "COMMENT";
         case TOKEN_COUNT:

@@ -42,7 +42,7 @@ void calculate_first(int symbol, AVLNode *node, intDynArrPtr arr, short numOfSym
     membership = calloc(numOfSymbols, sizeof(char)); // create an empty membership array
     if (membership==NULL)
     {
-        report_error(ERR_INTERNAL, -1, "Memory allocation failed");
+        report_error(ERR_INTERNAL, -1, "Memory allocation failed", NULL);
         return;
     }
 
@@ -57,7 +57,7 @@ intDynArrPtr* calculate_firsts(AVLNode *grammar, short numOfSymbols)
     intDynArrPtr* result = calloc(numOfSymbols, sizeof(intDynArrPtr));
     if (result==NULL)
     {
-        report_error(ERR_INTERNAL, -1, "FAILED MEMORY ALLOCATION");
+        report_error(ERR_INTERNAL, -1, "FAILED MEMORY ALLOCATION", NULL);
     }
     for (int i =0; i < numOfSymbols; i++)
     {
@@ -134,7 +134,7 @@ intDynArrPtr* calculate_follows(AVLNode *node, short numOfSymbols, intDynArrPtr*
     char* membership_arr = calloc(numOfSymbols*numOfSymbols, sizeof(char));
     if (membership_arr==NULL)
     {
-        report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE MEMORY");
+        report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE MEMORY", NULL);
         return NULL;
     }
 
@@ -152,7 +152,7 @@ intDynArrPtr* calculate_follows(AVLNode *node, short numOfSymbols, intDynArrPtr*
     intDynArrPtr* result = calloc(numOfSymbols, sizeof(intDynArrPtr));
     if (result==NULL)
     {
-        report_error(ERR_INTERNAL, -1, "FAILED MEMORY ALLOCATION");
+        report_error(ERR_INTERNAL, -1, "FAILED MEMORY ALLOCATION", NULL);
     }
     for (int i = 0; i < numOfSymbols; i++)
     {
@@ -190,7 +190,7 @@ AVLNode* closure(AVLNode* grammar, AVLNode* set, intDynArrPtr* first_sets)
         change = 0;
         while (!iterator_is_empty(iter_set))
         {
-            set_rule = iterator_next(iter_set);
+            set_rule = ((AVLNode*)iterator_next(iter_set))->data;
             // perform action on tree node
 
             if (set_rule->body[set_rule->dot] >= TOKEN_COUNT)
@@ -199,7 +199,7 @@ AVLNode* closure(AVLNode* grammar, AVLNode* set, intDynArrPtr* first_sets)
                 iter_root = init_tree_iterator(grammar);
                 while (!iterator_is_empty(iter_root))
                 { // iterate over the grammar tree (main grammar rules)
-                    root_rule = iterator_next(iter_root);
+                    root_rule = ((AVLNode*)iterator_next(iter_root))->data;
 
                     // check if the found prod rule's head is the non-terminal after the dot
                     if (root_rule->head == set_rule->body[set_rule->dot])
@@ -273,26 +273,27 @@ AVLNode* goto_func(AVLNode* root, AVLNode* set, intDynArrPtr* first_sets, int sy
     return closure(root, result, first_sets);
 }
 
-setDynArrPtr generate_items(AVLNode* grammar)
+genDynArrPtr generate_items(AVLNode* grammar)
 {
     void* temp = malloc(sizeof(int));
     if(temp==NULL){
-        report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE MEMORY");
+        report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE MEMORY", NULL);
         return NULL;
     }
 
     // augment the grammar to have S` -> S, $
-    *(int*)temp = SYMBOL_START;
-    ProdRule augmented_start = init_LR1_item(SYMBOL_START_TAG, (int*)temp, 1, 0, TOKEN_EOF);
+    *(int*)temp = TOKEN_COUNT+SYMBOL_START;
+    ProdRule augmented_start = init_LR1_item(TOKEN_COUNT + SYMBOL_START_TAG, (int*)temp, 1, 0, TOKEN_EOF);
     free(temp);
-    grammar = insert(grammar, augmented_start);
 
     // calculate first sets
     intDynArrPtr* first_sets = calculate_firsts(grammar, TOKEN_COUNT+SYMBOL_COUNT-1);
 
     // initialize a dynamic array to store the sets
-    setDynArrPtr setArr = init_set_dynamic_array();
-    add_to_set_dyn_array(setArr, closure(grammar, insert(NULL, augmented_start), first_sets));
+    genDynArrPtr setArr = init_gen_dynamic_array();
+    AVLNode* start_set = insert(NULL, augmented_start);
+    AVLNode* start_closure = closure(grammar, start_set, first_sets);
+    add_to_gen_dyn_array(setArr, start_closure);
 
     // create items
     char change = 1;
@@ -307,22 +308,143 @@ setDynArrPtr generate_items(AVLNode* grammar)
                 if (tempgoto != NULL)
                 {
                     char check = 0;
-                    for (int j = 0; j < i && !check; j++)
+                    for (int j = 0; j < setArr->array_size && !check; j++)
                     {
+
                         if (trees_is_equal(tempgoto, setArr->array[j]))
                         {
+                            delete_tree(tempgoto, 1);
                             check = 1;
                         }
                     }
                     if (!check)
                     {
                         change=1;
-                        add_to_set_dyn_array(setArr, tempgoto);
+                        add_to_gen_dyn_array(setArr, tempgoto);
                     }
                 }
             }
         }
     }
     return setArr;
+}
+
+AVLNode* init_grammar()
+{
+    AVLNode* root = NULL;
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_START_TAG, TOKEN_COUNT+SYMBOL_START, 0));
+    int arr1[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_COUNT+SYMBOL_EXPRESSION};
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_START, arr1, 2, 0));
+    int arr2[MAX_RULE_SIZE] = {TOKEN_IDENTIFIER, TOKEN_COUNT+SYMBOL_EXPRESSION};
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, arr2, 2, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_INT_LITERAL, 0));
+    return root;
+}
+
+void generate_parse_tables(unsigned int ***action_table, unsigned int ***goto_table, unsigned int *num_of_states)
+{
+
+    AVLNode* grammar = init_grammar();
+
+    intDynArrPtr* first_sets = calculate_firsts(grammar, TOKEN_COUNT+ SYMBOL_COUNT-1);
+
+    // generate LR1 item sets
+    genDynArrPtr item_sets = generate_items(grammar);
+
+    *num_of_states = item_sets->array_size;
+
+    // Initializing the action table
+    *action_table = calloc(item_sets->array_size,sizeof(unsigned int*));
+    if(*action_table == NULL){
+        report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE ACTION TABLE MEMORY", NULL);
+        return;}
+    for(int i = 0; i < item_sets->array_size; i++)
+    {
+        (*action_table)[i] = calloc((TOKEN_COUNT-1)*2,sizeof(unsigned int));
+        if((*action_table)[i] == NULL){
+            report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE ACTION TABLE MEMORY", NULL);
+            return;}
+    }
+    // initialize the goto table
+    *goto_table = calloc(item_sets->array_size,sizeof(unsigned int*));
+    if(*goto_table == NULL){
+        report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE GOTO TABLE MEMORY", NULL);
+        return;}
+    for(int i = 0; i < item_sets->array_size; i++)
+    {
+        (*goto_table)[i] = calloc(SYMBOL_COUNT-1,sizeof(unsigned int));
+        if((*goto_table)[i] == NULL){
+            report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE GOTO TABLE MEMORY", NULL);
+            return;}
+    }
+
+    // setup
+    AVLNode* current_set;
+    TreeIterator* iter;
+    ProdRule item;
+    // iterate over all item sets
+    for(int i = 0; i< item_sets->array_size; i++)
+    {
+        current_set = item_sets->array[i];
+        iter = init_tree_iterator(current_set);
+        while(!iterator_is_empty(iter))  // iterate over every item in the set
+        {
+            item = ((AVLNode*)iterator_next(iter))->data; // get the next item
+
+            // condition 1, for items where the dot is not at the end of the body
+            if (item->dot < item->bodySize)
+            {
+                // if the dot is a terminal symbol
+                if(item->body[item->dot] < TOKEN_COUNT)
+                {
+                    // generate a temporary goto set GOTO(current_set, body[dot])
+                    AVLNode* temp_goto = goto_func(grammar, current_set, first_sets, item->body[item->dot]);
+                    for(int j = 0; j< item_sets->array_size; j++) // iterate over every item set
+                    {   // check if the trees are equal
+                        if(trees_is_equal(temp_goto, item_sets->array[j]))
+                        {
+                            // if they are, update the action table accordingly
+                            (*action_table)[i][item->body[item->dot]*2] = ACTION_SHIFT;
+                            (*action_table)[i][item->body[item->dot]*2+1] = j;
+                        }
+                    }
+                    delete_tree(temp_goto, 1);
+                }
+            }
+            // condition 2, for where the dot is at the end of the body and the head isn't the augmented start
+            else if (item->head != SYMBOL_START_TAG+TOKEN_COUNT)
+            {
+                if ((*action_table)[i][item->lookahead*2]) // check if the state is already set
+                { report_error(ERR_INTERNAL, -1, "INVALID GRAMMAR, ACTION TABLE CONFLICT", NULL); return;}
+                (*action_table)[i][item->lookahead*2] = ACTION_REDUCE;
+                (*action_table)[i][item->lookahead*2+1] = find_pos(grammar, item);
+            }
+            // condition 3, for where the dot is at the end and the item is the augmented start
+            else if (item->head == SYMBOL_START_TAG+TOKEN_COUNT)
+            {
+                if ((*action_table)[i][item->lookahead*2]) // check if the state is already set
+                { report_error(ERR_INTERNAL, -1, "INVALID GRAMMAR, ACTION TABLE CONFLICT", NULL); return;}
+                (*action_table)[i][item->lookahead*2] = ACTION_ACCEPT;
+            }
+        }
+        free(iter->stack);  // free the iterator
+        free(iter);
+
+        for(int A = 0; A<SYMBOL_COUNT; A++)  // iterate over every non-terminal symbol
+        {
+            // create a temporary goto set, GOTO(current_set, A)
+            AVLNode* temp_goto = goto_func(grammar, current_set, first_sets, A+TOKEN_COUNT);
+            for(int j = 0; j< item_sets->array_size; j++) // iterate over every item set
+            {
+                // if the temp goto set and the item set are equal,
+                // then goto_table at current state symbol A equals matching set number
+                if(trees_is_equal(temp_goto, item_sets->array[j]))
+                {
+                    (*goto_table)[i][A] = j;
+                }
+            }
+            delete_tree(temp_goto, 1);
+        }
+    }
 }
 
