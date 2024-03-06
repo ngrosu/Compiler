@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 // Function to report an error
-void report_error(ErrorCode, unsigned int, const char*); // report an error
+void report_error(ErrorCode, unsigned int, const char *, const char *extra); // report an error
 
 #endif // ERRORS_H
 

@@ -38,6 +38,7 @@ typedef struct AVLNode {
     int height;
 } AVLNode;
 
+
 int height(AVLNode* N); //get height of a node
 
 int max(int a, int b); // max of 2 ints
@@ -56,9 +57,15 @@ AVLNode* find(AVLNode* root, ProdRule data); // find in AVL tree
 
 AVLNode* find_head(AVLNode* root, int symbol); //  find node whose head is a certain symbol
 
+// find the number of the rule in the grammar tree
+unsigned int find_pos(AVLNode* grammar, ProdRule data);
+
+void delete_tree(AVLNode* root, int deleteData);  // delete the tree, if deleteData is 1: delete the rules as well
+
 char trees_is_equal(AVLNode* a, AVLNode* b); // check if two trees are equal
 
 void in_order(AVLNode* root); // print AVL tree in order
+
 
 typedef struct TreeIterator
 {
@@ -70,7 +77,7 @@ TreeIterator* init_tree_iterator(AVLNode* root);
 
 int iterator_is_empty(TreeIterator* iter);
 
-ProdRule iterator_next(TreeIterator* iter);
+void* iterator_next(TreeIterator* iter);
 
 // Dynamic Array
 
@@ -90,22 +97,24 @@ void delete_int_dynamic_array(intDynArrPtr arr);
 // add an integer to the dynamic array
 void add_to_int_dyn_array(intDynArrPtr arr, int num);
 
-typedef struct setDynamicArray
+typedef struct genDynamicArray
 {
     int array_size;
     int array_capacity;
-    AVLNode** array;
-} *setDynArrPtr,setDynArr;
+    void** array;
+} *genDynArrPtr,genDynArr;
 
 // initialize an set dynamic array
-setDynArrPtr init_set_dynamic_array();
+genDynArrPtr init_gen_dynamic_array();
 
 // delete an set dynamic array
-void delete_set_dynamic_array(setDynArrPtr arr);
+void delete_set_dynamic_array(genDynArrPtr arr);
 
 // add an integer to the dynamic array
-void add_to_set_dyn_array(setDynArrPtr arr, AVLNode* set);
+void add_to_gen_dyn_array(genDynArrPtr arr, void *data);
 
+// create a dynamic array from the elements of the tree in order for iterative traversal
+genDynArrPtr convert_AVL_to_array(AVLNode* tree);
 
 // Linked List
 
@@ -131,6 +140,9 @@ Stack* init_stack();
 
 // push an item onto the stack
 void push(Stack* stack, void* data);
+
+// push an int onto the stack
+void push_int(Stack* stack, unsigned int data);
 
 // pop from the stack
 void* pop(Stack* stack);

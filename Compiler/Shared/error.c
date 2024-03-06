@@ -4,7 +4,7 @@
 
 #include "error.h"
 
-void report_error(ErrorCode code, unsigned int line, const char* message)
+void report_error(ErrorCode code, unsigned int line, const char *message, const char *extra)
 {  // print out an error
     const char* errorString = "Unknown error";
 
@@ -31,5 +31,8 @@ void report_error(ErrorCode code, unsigned int line, const char* message)
             break;  // No action needed for no error or default case
     }
 
-    fprintf(stderr, "[%s] at line %d: %s\n", errorString, line, message);
+    fprintf(stderr, "[%s] at line %d: %s", errorString, line, message);
+    if(extra!=NULL)
+    fprintf(stderr, "%s", extra);
+    fprintf(stderr, "\n");
 }
