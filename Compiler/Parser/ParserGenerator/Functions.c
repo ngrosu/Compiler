@@ -176,12 +176,10 @@ AVLNode* closure(AVLNode* grammar, AVLNode* set, intDynArrPtr* first_sets)
     TreeIterator* iter_set;
     TreeIterator* iter_root;
 
-
     intDynArrPtr first;
     ProdRule new_rule;
 
     char change = 1;
-
     ProdRule set_rule; // set production rule node
     ProdRule root_rule; // grammar production rule node
     while(change)
@@ -247,21 +245,37 @@ AVLNode* closure(AVLNode* grammar, AVLNode* set, intDynArrPtr* first_sets)
 
 AVLNode* goto_helper(AVLNode* set, AVLNode* result, int symbol)
 {
-    if (set==NULL) {return result;}
+    ProdRule data;
 
-    ProdRule data = set->data;
-    if (data->dot != data->bodySize) // make sure the dot is not at the end of the rule
+    TreeIterator* iter = init_tree_iterator(set);
+    while(!iterator_is_empty(iter))
     {
-        if (data->body[data->dot] == symbol) // if the symbol after the dot matches
+        data = ((AVLNode* )iterator_next(iter))->data;
+        if (data->dot != data->bodySize) // make sure the dot is not at the end of the rule
         {
-            // advance the dot by 1 and add to the new set
-            result = insert(result, init_LR1_item(data->head, data->body, data->bodySize,
-                                                  (short)(data->dot+1), data->lookahead));
+            if (data->body[data->dot] == symbol) // if the symbol after the dot matches
+            {
+                // advance the dot by 1 and add to the new set
+                result = insert(result, init_LR1_item(data->head, data->body, data->bodySize,
+                                                      (short)(data->dot+1), data->lookahead));
+            }
         }
     }
-    // repeat for entire tree
-    result = goto_helper(set->left, result, symbol);
-    result = goto_helper(set->right, result, symbol);
+
+//    if (set==NULL) {return result;}
+//    data = set->data;
+//    if (data->dot != data->bodySize) // make sure the dot is not at the end of the rule
+//    {
+//        if (data->body[data->dot] == symbol) // if the symbol after the dot matches
+//        {
+//            // advance the dot by 1 and add to the new set
+//            result = insert(result, init_LR1_item(data->head, data->body, data->bodySize,
+//                                                  (short)(data->dot+1), data->lookahead));
+//        }
+//    }
+//
+//    result = goto_helper(set->left, result, symbol); //repeat for entire tree
+//    result = goto_helper(set->right, result, symbol);
 
     return result;
 }
@@ -332,12 +346,31 @@ genDynArrPtr generate_items(AVLNode* grammar)
 AVLNode* init_grammar()
 {
     AVLNode* root = NULL;
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_START_TAG, TOKEN_COUNT+SYMBOL_START, 0));
+//    int arr1[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_COUNT+SYMBOL_EXPRESSION};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_START, arr1, 2, 0));
+//    int arr2[MAX_RULE_SIZE] = {TOKEN_IDENTIFIER, TOKEN_COUNT+SYMBOL_EXPRESSION};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, arr2, 2, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_INT_LITERAL, 0));
+
     root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_START_TAG, TOKEN_COUNT+SYMBOL_START, 0));
-    int arr1[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_COUNT+SYMBOL_EXPRESSION};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_START, arr1, 2, 0));
-    int arr2[MAX_RULE_SIZE] = {TOKEN_IDENTIFIER, TOKEN_COUNT+SYMBOL_EXPRESSION};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, arr2, 2, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_INT_LITERAL, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_START, TOKEN_COUNT+SYMBOL_EXPRESSION, 0));
+    int arr1[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_PLUS_OP, TOKEN_COUNT+SYMBOL_TERM};
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION,  TOKEN_COUNT + SYMBOL_TERM, 0));
+
+    int arr2[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_TERM, TOKEN_ASTERISK, TOKEN_COUNT+SYMBOL_FACTOR};
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TERM, TOKEN_COUNT+SYMBOL_FACTOR, 0));
+    int arr4 [MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_TERM, TOKEN_F_SLASH, TOKEN_COUNT+SYMBOL_FACTOR};
+
+    int arr3[MAX_RULE_SIZE] = {TOKEN_L_PAREN, TOKEN_COUNT + SYMBOL_EXPRESSION, TOKEN_R_PAREN};
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, arr1, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, arr2, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, arr4, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, arr3, 3, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_INT_LITERAL, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_IDENTIFIER, 0));
+
+
     return root;
 }
 

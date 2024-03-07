@@ -19,7 +19,7 @@ DFA create_DFA()
 void init_DFA(DFA dfa)
 {
     int i;
-    const char* stddelimiter = " /;,\n(){}[]";
+    const char* stddelimiter = " /;,\n(){}[]=-+<>";
 
     // state 0 is error
     // state 1 is the starting state
@@ -64,6 +64,10 @@ void init_DFA(DFA dfa)
     add_symbol_token_to_DFA(dfa, ";", TOKEN_SEMICOLON, START_STATE);
     add_symbol_token_to_DFA(dfa, "=", TOKEN_EQUAL, START_STATE);
     add_symbol_token_to_DFA(dfa, "=", TOKEN_EQUAL_EQUAL_OP, dfa->num_of_states-1);
+    add_symbol_token_to_DFA(dfa, "+", TOKEN_PLUS_OP, START_STATE);
+    add_symbol_token_to_DFA(dfa, "-", TOKEN_MINUS_OP, START_STATE);
+    add_symbol_token_to_DFA(dfa, "*", TOKEN_ASTERISK, START_STATE);
+    add_symbol_token_to_DFA(dfa, "/", TOKEN_F_SLASH, START_STATE);
 
 
 

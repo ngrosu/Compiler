@@ -49,10 +49,11 @@ void printAST(ASTNode *node, int depth, char *finals)
             case TOKEN_IDENTIFIER:
             case TOKEN_INT_LITERAL:
             case TOKEN_STRING_LITERAL:
-                printf(": %s\n", node->token->lexeme);
+                printf(": %s", node->token->lexeme);
             default:
                 break;
         }
+        printf("\n");
     }
     else
     {  // if non-terminal, print out the symbol name,

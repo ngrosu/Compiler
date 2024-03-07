@@ -56,19 +56,20 @@ short compare_prod_rules(ProdRule a, ProdRule b) // compare two production rules
         if (a->bodySize < b->bodySize) return -1;
         else if (a->bodySize > b->bodySize) return 1;
 
-            // If body sizes are equal, compare the body contents element-wise
-            for (int i = 0; i < a->bodySize; ++i) {
-                if (a->body[i] < b->body[i]) return -1;
-                else if (a->body[i] > b->body[i]) return 1;
-            }
+            // If contents are equal, compare the dot locations
+            if (a->dot < b->dot) return -1;
+            else if (a->dot > b->dot) return 1;
 
-                // If contents are equal, compare the dot locations
-                if (a->dot < b->dot) return -1;
-                else if (a->dot > b->dot) return 1;
+                // If dots are equal compare lookahead (only relevant for items)
+                if(a->lookahead < b->lookahead) return -1;
+                else if (a->lookahead > b->lookahead) return 1;
+                    // If body sizes are equal, compare the body contents element-wise
+                    for (int i = 0; i < a->bodySize; ++i) {
+                        if (a->body[i] < b->body[i]) return -1;
+                        else if (a->body[i] > b->body[i]) return 1;
+                }
 
-                    // If dots are equal compare lookahead (only relevant for items)
-                    if(a->lookahead < b->lookahead) return -1;
-                    else if (a->lookahead > b->lookahead) return 1;
+
 
     return 0;
 }
@@ -115,14 +116,13 @@ AVLNode* right_rotate(AVLNode* y) {
     return x; // new root
 }
 
-
 AVLNode* left_rotate(AVLNode* x) {
     AVLNode* y = x->right; //perform a left rotation
     AVLNode* z = y->left;
     y->left = x;
     x->right = z;
-    y->height = max(height(y->left), height(y->right)) + 1;
     x->height = max(height(x->left), height(x->right)) + 1;
+    y->height = max(height(y->left), height(y->right)) + 1;
     return y; // new root
 }
 

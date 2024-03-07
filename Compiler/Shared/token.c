@@ -34,27 +34,27 @@ char* get_token_name(TokenType type)
         case TOKEN_STRING_LITERAL:
             return "STRING_LITERAL";
         case TOKEN_PLUS_OP:
-            return "+";
+            return "PLUS";
         case TOKEN_MINUS_OP:
-            return "-";
+            return " - ";
         case TOKEN_EQUAL_EQUAL_OP:
-            return "==";
+            return " == ";
         case TOKEN_LESS_THAN_OP:
-            return "<";
+            return " < ";
         case TOKEN_GREATER_THAN_OP:
-            return ">";
+            return " > ";
         case TOKEN_LESS_THAN_EQUAL_OP:
-            return "<=";
+            return " <= ";
         case TOKEN_GREATER_THAN_EQUAL_OP:
-            return ">=";
+            return " >= ";
         case TOKEN_BITWISE_OR:
-            return "|";
+            return " | ";
         case TOKEN_BITWISE_AND:
-            return "&";
+            return " & ";
         case TOKEN_BITWISE_XOR:
-            return "^";
+            return " ^ ";
         case TOKEN_BITWISE_NOT:
-            return "~";
+            return " ~ ";
         case TOKEN_IF:
             return "IF";
         case TOKEN_ELSE:
