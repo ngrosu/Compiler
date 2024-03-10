@@ -19,7 +19,7 @@ DFA create_DFA()
 void init_DFA(DFA dfa)
 {
     int i;
-    const char* stddelimiter = " /;,\n(){}[]=-+<>";
+    const char* stddelimiter = " /;,\n(){}[]=-+<>*";
 
     // state 0 is error
     // state 1 is the starting state

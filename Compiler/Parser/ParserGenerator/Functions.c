@@ -214,7 +214,7 @@ AVLNode* closure(AVLNode* grammar, AVLNode* set, intDynArrPtr* first_sets)
                                                                 0, set_rule->lookahead));
                             }
                             else {free(item);}
-                        } else
+                        } else if (set_rule->dot < set_rule->bodySize)
                         {
                             // add the symbol after the symbol that's after the dot's first set as lookahead
                             first = first_sets[set_rule->body[set_rule->dot + 1]];
@@ -347,11 +347,137 @@ AVLNode* init_grammar()
 {
     AVLNode* root = NULL;
 //    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_START_TAG, TOKEN_COUNT+SYMBOL_START, 0));
+//    int arr1[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_STATEMENTS, TOKEN_EOF};
+//    // start
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_START, arr1, 3, 0));
+////    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_START, TOKEN_EOF, 0));
+//
+//    // statement
+//    int arr2[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_COUNT + SYMBOL_END_STATEMENT};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, arr2, 2, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_DECLARATION, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_IF, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_IF_ELSE, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_FOR, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_WHILE, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_RETURN, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_SCOPE, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_END_STATEMENT, 0));
+//    // statements
+//    arr2[0] = SYMBOL_STATEMENTS + TOKEN_COUNT; arr2[1] = SYMBOL_STATEMENT + TOKEN_COUNT;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENTS, arr2, 2, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENTS, TOKEN_COUNT+SYMBOL_STATEMENT, 0));
+//
+//    // if statement
+//    int if_arr[MAX_RULE_SIZE] = {TOKEN_IF, TOKEN_L_PAREN, TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_R_PAREN, TOKEN_COUNT + SYMBOL_SCOPE};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_IF, if_arr, 5, 0));
+//    if_arr[0] = SYMBOL_IF + TOKEN_COUNT; if_arr[1] = TOKEN_ELSE; if_arr[2] = TOKEN_COUNT + SYMBOL_SCOPE;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_IF_ELSE, if_arr, 3, 0));
+//
+//    // while statement
+//    int while_arr[MAX_RULE_SIZE] = {TOKEN_WHILE, TOKEN_L_PAREN, TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_R_PAREN, TOKEN_COUNT + SYMBOL_SCOPE};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_WHILE, while_arr, 5, 0));
+//    // for statement
+//    int for_arr[MAX_RULE_SIZE] = {TOKEN_FOR, TOKEN_L_PAREN, TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_R_PAREN, TOKEN_COUNT + SYMBOL_SCOPE};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FOR, for_arr, 7, 0));
+//
+//    // declaration
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_DECLARATION, TOKEN_COUNT + SYMBOL_ARR_DEC, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_DECLARATION, TOKEN_COUNT + SYMBOL_VAR_DEC, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_DECLARATION, TOKEN_COUNT + SYMBOL_FUNC_DEC, 0));
+//
+//    int dec_arr[MAX_RULE_SIZE] = {TOKEN_COUNT + SYMBOL_TYPE, TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_COUNT + SYMBOL_EXPRESSION, TOKEN_COUNT+SYMBOL_END_STATEMENT};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_VAR_DEC, dec_arr, 5, 0));
+//    dec_arr[2] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_VAR_DEC, dec_arr, 3, 0));
+//    dec_arr[2] = TOKEN_R_BRACKET; dec_arr[3] = TOKEN_COUNT + SYMBOL_NUMBER; dec_arr[4] = TOKEN_L_BRACKET; dec_arr[5] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ARR_DEC, dec_arr, 6, 0));
+//
+//    // function declaration
+//    dec_arr[2] = TOKEN_COLON; dec_arr[3] = TOKEN_COUNT + SYMBOL_PARAMETERS; dec_arr[4] = TOKEN_COUNT + SYMBOL_RET_SCOPE;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 5, 0));
+//    dec_arr[0] = TOKEN_VOID; dec_arr[4] = TOKEN_COUNT + SYMBOL_SCOPE;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 5, 0));
+//    dec_arr[2] = TOKEN_COUNT + SYMBOL_SCOPE;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 3, 0));
+//    dec_arr[2] = TOKEN_COUNT + SYMBOL_RET_SCOPE; dec_arr[0] = TOKEN_COUNT + SYMBOL_TYPE;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 3, 0));
+//
+//    // parameter declaration
+//    int par_arr[NUM_OF_CHARS] = {TOKEN_COUNT + SYMBOL_PARAMETERS, TOKEN_COMMA, TOKEN_COUNT + SYMBOL_PARAMETER};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETERS, par_arr, 3, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETERS, TOKEN_COUNT + SYMBOL_PARAMETER, 0));
+//    par_arr[0] = TOKEN_COUNT + SYMBOL_TYPE; par_arr[1] = TOKEN_IDENTIFIER;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETER, par_arr, 2, 0));
+//
+//
+//    // expressions
+//    int expr_arr[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_PLUS_OP, TOKEN_COUNT+SYMBOL_TERM};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, expr_arr, 3, 0));
+//    expr_arr[1] = TOKEN_MINUS_OP;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, expr_arr, 3, 0));
+//    expr_arr[1] = TOKEN_BITWISE_OR;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, expr_arr, 3, 0));
+//
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION,  TOKEN_COUNT + SYMBOL_TERM, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION,  TOKEN_COUNT + SYMBOL_BOOL_EXPR, 0));
+//
+//    int term_arr[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_TERM, TOKEN_ASTERISK, TOKEN_COUNT+SYMBOL_FACTOR};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0));
+//    term_arr[1] = TOKEN_F_SLASH;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0));
+//    term_arr[1] = TOKEN_BITWISE_AND;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0));
+//    term_arr[1] = TOKEN_BITWISE_XOR;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TERM, TOKEN_COUNT+SYMBOL_FACTOR, 0));
+//
+//    int fact_arr[MAX_RULE_SIZE] = {TOKEN_L_PAREN, TOKEN_COUNT + SYMBOL_EXPRESSION, TOKEN_R_PAREN};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, fact_arr, 3, 0));
+//    fact_arr[0] = TOKEN_BITWISE_NOT; fact_arr[1] = TOKEN_COUNT + SYMBOL_FACTOR;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, fact_arr, 2, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_COUNT + SYMBOL_NUMBER, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_IDENTIFIER, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_COUNT + SYMBOL_FUNC_CALL, 0));
+//
+//
+//    // bool expression
+//
+//    int bool_arr[MAX_RULE_SIZE] = {TOKEN_COUNT + SYMBOL_BOOL_EXPR, TOKEN_OR, TOKEN_COUNT + SYMBOL_BOOL_TERM};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_EXPR, bool_arr, 3, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_EXPR, TOKEN_COUNT + SYMBOL_BOOL_TERM, 0));
+//
+//    int bool_t_arr[MAX_RULE_SIZE] = {TOKEN_COUNT + SYMBOL_BOOL_TERM, TOKEN_AND, TOKEN_COUNT + SYMBOL_BOOL_FACTOR};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_TERM, bool_t_arr, 3, 0));
+//
+//    int bool_f_arr[MAX_RULE_SIZE] = {TOKEN_L_PAREN, TOKEN_COUNT + SYMBOL_BOOL_EXPR, TOKEN_R_PAREN};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_FACTOR, bool_f_arr, 3, 0));
+//    bool_f_arr[0] = TOKEN_NOT; bool_f_arr[1] = TOKEN_COUNT + SYMBOL_BOOL_FACTOR;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_FACTOR, bool_f_arr, 2, 0));
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_FACTOR, TOKEN_COUNT + SYMBOL_RELAT_EXPR, 0));
+//
+//    int relat_arr[MAX_RULE_SIZE] = {TOKEN_COUNT + SYMBOL_EXPRESSION, TOKEN_COUNT + SYMBOL_RELAT_OP, TOKEN_COUNT + SYMBOL_EXPRESSION};
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_RELAT_EXPR, relat_arr, 3, 0));
+//    relat_arr[0] = TOKEN_L_PAREN; relat_arr[1] = TOKEN_COUNT + SYMBOL_RELAT_EXPR; relat_arr[2] = TOKEN_R_PAREN;
+//
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_RELAT_OP, TOKEN_GREATER_THAN_EQUAL_OP, 0));
+
+
+
+//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_START_TAG, TOKEN_COUNT+SYMBOL_START, 0));
 //    int arr1[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_COUNT+SYMBOL_EXPRESSION};
 //    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_START, arr1, 2, 0));
 //    int arr2[MAX_RULE_SIZE] = {TOKEN_IDENTIFIER, TOKEN_COUNT+SYMBOL_EXPRESSION};
 //    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, arr2, 2, 0));
 //    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_INT_LITERAL, 0));
+    // Expression => Expression + Term
+    // Expression => Term
+    // Term => Term * Factor
+    // Term => Term / Factor
+    // Term => Factor
+    // Factor => (Expression)
+    // Factor => INTEGER
+
 
     root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_START_TAG, TOKEN_COUNT+SYMBOL_START, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_START, TOKEN_COUNT+SYMBOL_EXPRESSION, 0));
@@ -369,7 +495,6 @@ AVLNode* init_grammar()
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, arr3, 3, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_INT_LITERAL, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_IDENTIFIER, 0));
-
 
     return root;
 }
@@ -448,7 +573,7 @@ void generate_parse_tables(unsigned int ***action_table, unsigned int ***goto_ta
             else if (item->head != SYMBOL_START_TAG+TOKEN_COUNT)
             {
                 if ((*action_table)[i][item->lookahead*2]) // check if the state is already set
-                { report_error(ERR_INTERNAL, -1, "INVALID GRAMMAR, ACTION TABLE CONFLICT", NULL); return;}
+                { report_error(ERR_INTERNAL, -1, "INVALID GRAMMAR, ACTION TABLE CONFLICT", get_symbol_name(item->head)); return;}
                 (*action_table)[i][item->lookahead*2] = ACTION_REDUCE;
                 (*action_table)[i][item->lookahead*2+1] = find_pos(grammar, item);
             }
@@ -456,7 +581,7 @@ void generate_parse_tables(unsigned int ***action_table, unsigned int ***goto_ta
             else if (item->head == SYMBOL_START_TAG+TOKEN_COUNT)
             {
                 if ((*action_table)[i][item->lookahead*2]) // check if the state is already set
-                { report_error(ERR_INTERNAL, -1, "INVALID GRAMMAR, ACTION TABLE CONFLICT", NULL); return;}
+                { report_error(ERR_INTERNAL, -1, "INVALID GRAMMAR, ACTION TABLE CONFLICT", get_symbol_name(item->head)); return;}
                 (*action_table)[i][item->lookahead*2] = ACTION_ACCEPT;
             }
         }
