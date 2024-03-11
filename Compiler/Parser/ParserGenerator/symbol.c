@@ -77,6 +77,12 @@ const char* get_symbol_name(int symbol)
             return "End Statement";
         default:
             return "INVALID";
+        case SYMBOL_ASSIGNMENT:
+            return "Assignment";
+        case SYMBOL_ARGUMENTS:
+            return "Arguments";
+        case SYMBOL_OUTPUT:
+            return "Output";
     }
 
 }

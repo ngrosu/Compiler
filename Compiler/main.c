@@ -83,7 +83,7 @@ int main()
 //    in_order(init_grammar());
     //generate_items(init_grammar());
     Parser parser = init_parser(lexer->tokens, lexer->num_of_tokens,
-                                convert_AVL_to_array(init_grammar()), 0, 1, "action.b", "goto.b");
+                                convert_AVL_to_array(init_grammar()), 1, 1, "action.b", "goto.b");
     printf("%d", parser->num_of_states);
 //    print_tokens(lexer);
 

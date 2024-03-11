@@ -117,5 +117,7 @@ char* get_token_name(TokenType type)
             return "COMMA";
         case TOKEN_CHAR_LITERAL:
             return "CHAR LITERAL";
+        case TOKEN_OUTPUT:
+            return "OUTPUT";
     }
 }

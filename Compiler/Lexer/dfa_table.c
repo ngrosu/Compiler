@@ -19,7 +19,7 @@ DFA create_DFA()
 void init_DFA(DFA dfa)
 {
     int i;
-    const char* stddelimiter = " /;,\n(){}[]=-+<>*";
+    const char* stddelimiter = " /:;,\n(){}[]=-+<>*";
 
     // state 0 is error
     // state 1 is the starting state
@@ -55,6 +55,13 @@ void init_DFA(DFA dfa)
     set_transition(dfa, '\"', dfa->num_of_states-2, dfa->num_of_states-1);
     add_all_delimiters(dfa, dfa->num_of_states-1);
 
+    // char literal
+    add_token_to_DFA(dfa, "\'\'\'", TOKEN_CHAR_LITERAL, START_STATE, stddelimiter);
+    for(i=0; i<NUM_OF_CHARS; i++)
+    {
+        if(i!='\n') {set_transition(dfa, (char)i, dfa->num_of_states-3, dfa->num_of_states-2);}
+    }
+
 
     // symbols
     add_symbol_token_to_DFA(dfa, "(", TOKEN_L_PAREN, START_STATE);
@@ -70,6 +77,12 @@ void init_DFA(DFA dfa)
     add_symbol_token_to_DFA(dfa, "-", TOKEN_MINUS_OP, START_STATE);
     add_symbol_token_to_DFA(dfa, "*", TOKEN_ASTERISK, START_STATE);
     add_symbol_token_to_DFA(dfa, "/", TOKEN_F_SLASH, START_STATE);
+    add_symbol_token_to_DFA(dfa, ">", TOKEN_GREATER_THAN_OP, START_STATE);
+    add_symbol_token_to_DFA(dfa, "<", TOKEN_LESS_THAN_OP, START_STATE);
+    add_symbol_token_to_DFA(dfa, "[", TOKEN_L_BRACKET, START_STATE);
+    add_symbol_token_to_DFA(dfa, "]", TOKEN_R_BRACKET, START_STATE);
+    add_symbol_token_to_DFA(dfa, "&", TOKEN_BITWISE_AND, START_STATE);
+    add_symbol_token_to_DFA(dfa, "&", TOKEN_AND, dfa->num_of_states-1);
 
 
 
@@ -90,6 +103,18 @@ void init_DFA(DFA dfa)
 
     // starting with e
     add_alnum_token_to_DFA(dfa, "else", TOKEN_ELSE, START_STATE, stddelimiter);
+
+    // starting l
+    add_alnum_token_to_DFA(dfa, "long", TOKEN_LONG, START_STATE, stddelimiter);
+
+    // starting with w
+    add_alnum_token_to_DFA(dfa, "while", TOKEN_WHILE, START_STATE, stddelimiter);
+
+    // starting with f
+    add_alnum_token_to_DFA(dfa, "for", TOKEN_FOR, START_STATE, stddelimiter);
+
+    // starting with o
+    add_alnum_token_to_DFA(dfa, "OUTPUT", TOKEN_OUTPUT, START_STATE, stddelimiter);
 
 }
 

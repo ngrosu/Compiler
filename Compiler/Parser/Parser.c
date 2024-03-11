@@ -49,6 +49,7 @@ void printAST(ASTNode *node, int depth, char *finals)
             case TOKEN_IDENTIFIER:
             case TOKEN_INT_LITERAL:
             case TOKEN_STRING_LITERAL:
+            case TOKEN_CHAR_LITERAL:
                 printf(": %s", node->token->lexeme);
             default:
                 break;
