@@ -75,14 +75,15 @@ int main1()
 
 int main()
 {
+
     Lexer lexer = init_lexer("../../test.chad");
 //    print_transition_matrix(lexer->dfa);
     tokenize(lexer);
     //in_order(init_grammar());
-
+//    in_order(init_grammar());
     //generate_items(init_grammar());
     Parser parser = init_parser(lexer->tokens, lexer->num_of_tokens,
-                                convert_AVL_to_array(init_grammar()));
+                                convert_AVL_to_array(init_grammar()), 0, 1, "action.b", "goto.b");
     printf("%d", parser->num_of_states);
 //    print_tokens(lexer);
 

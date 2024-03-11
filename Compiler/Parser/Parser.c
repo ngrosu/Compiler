@@ -70,14 +70,15 @@ void printAST(ASTNode *node, int depth, char *finals)
     //├─│
 }
 
-Parser init_parser(Token* tokens, unsigned int num_of_tokens, genDynArrPtr grammar)
+Parser
+init_parser(Token *tokens, unsigned int num_of_tokens, genDynArrPtr grammar, char load, char save, char *action_fp,
+            char *goto_fp)
 {
     Parser parser = malloc(sizeof(parserStruct));
     parser->tokens = tokens;
     parser->num_of_tokens = num_of_tokens;
     parser->grammar = grammar;
-    //TODO change to read from file when i have the energy
-    generate_parse_tables(&(parser->action_table), &(parser->goto_table), &parser->num_of_states);
+    generate_parse_tables(&(parser->action_table), &(parser->goto_table), &parser->num_of_states, load, save, action_fp, goto_fp);
     parser->stack = init_stack();
     return parser;
 }

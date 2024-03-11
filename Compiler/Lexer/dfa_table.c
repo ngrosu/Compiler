@@ -62,6 +62,8 @@ void init_DFA(DFA dfa)
     add_symbol_token_to_DFA(dfa, "{", TOKEN_L_CURLY_B, START_STATE);
     add_symbol_token_to_DFA(dfa, "}", TOKEN_R_CURLY_B, START_STATE);
     add_symbol_token_to_DFA(dfa, ";", TOKEN_SEMICOLON, START_STATE);
+    add_symbol_token_to_DFA(dfa, ":", TOKEN_COLON, START_STATE);
+    add_symbol_token_to_DFA(dfa, ",", TOKEN_COMMA, START_STATE);
     add_symbol_token_to_DFA(dfa, "=", TOKEN_EQUAL, START_STATE);
     add_symbol_token_to_DFA(dfa, "=", TOKEN_EQUAL_EQUAL_OP, dfa->num_of_states-1);
     add_symbol_token_to_DFA(dfa, "+", TOKEN_PLUS_OP, START_STATE);
@@ -77,10 +79,17 @@ void init_DFA(DFA dfa)
     add_alnum_token_to_DFA(dfa, "if", TOKEN_IF, START_STATE, stddelimiter);
     add_alnum_token_to_DFA(dfa, "nt", TOKEN_INT, dfa->num_of_states-2, stddelimiter);
 
+    // starting with r
     add_alnum_token_to_DFA(dfa, "return", TOKEN_RETURN, START_STATE, stddelimiter);
 
+    // starting with v
+    add_alnum_token_to_DFA(dfa, "void", TOKEN_VOID, START_STATE, stddelimiter);
 
+    // starting with c
+    add_alnum_token_to_DFA(dfa, "char", TOKEN_CHAR, START_STATE, stddelimiter);
 
+    // starting with e
+    add_alnum_token_to_DFA(dfa, "else", TOKEN_ELSE, START_STATE, stddelimiter);
 
 }
 

@@ -99,5 +99,23 @@ char* get_token_name(TokenType type)
             return "ASTERISK";
         case TOKEN_F_SLASH:
             return "F_SLASH";
+        case TOKEN_NOT_EQUAL_OP:
+            return "NOT EQUAL";
+        case TOKEN_CHAR:
+            return "CHAR";
+        case TOKEN_LONG:
+            return "LONG";
+        case TOKEN_UINT:
+            return "UINT";
+        case TOKEN_ULONG:
+            return "ULONG";
+        case TOKEN_VOID:
+            return "VOID";
+        case TOKEN_COLON:
+            return "COLON";
+        case TOKEN_COMMA:
+            return "COMMA";
+        case TOKEN_CHAR_LITERAL:
+            return "CHAR LITERAL";
     }
 }

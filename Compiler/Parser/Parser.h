@@ -34,7 +34,9 @@ typedef struct parser{
 
 ASTNode *init_AST_node(int type, ASTNode **children, int num_of_children, Token token);
 
-Parser init_parser(Token* tokens, unsigned int num_of_tokens, genDynArrPtr grammar);
+Parser
+init_parser(Token *tokens, unsigned int num_of_tokens, genDynArrPtr grammar, char load, char save, char *action_fp,
+            char *goto_fp);
 
 void parse(Parser parser);
 

@@ -5,6 +5,7 @@
 #ifndef COMPILER_FUNCTIONS_H
 #define COMPILER_FUNCTIONS_H
 #include "DataStructures.h"
+#include <stdio.h>
 
 void first_helper(int symbol, AVLNode *node, AVLNode *root, intDynArrPtr arr, char* membership); // get a symbol to find the FIRST() of
 // get an AVL tree of the production rules, a dynamic array to store the values, and an empty membership array the size
@@ -37,6 +38,12 @@ genDynArrPtr generate_items(AVLNode* grammar);
 
 AVLNode* init_grammar();
 
-void generate_parse_tables(unsigned int ***action_table, unsigned int ***goto_table, unsigned int *num_of_states);
+void
+generate_parse_tables(unsigned int ***action_table, unsigned int ***goto_table, unsigned int *num_of_states, char load,
+                      char save, const char *action_fp, const char *goto_fp);
+
+void save_table(unsigned int **table, unsigned int row_size, unsigned int num_of_rows, const char* filename);
+
+unsigned int ** load_table(const char* filename);
 
 #endif //COMPILER_FUNCTIONS_H
