@@ -222,7 +222,7 @@ void add_alnum_token_to_DFA(DFA dfa, char* token, TokenType token_type, StatesIn
     while (*token)
     {
         set_state_alnums_to_identifier(dfa, curr_state); // set transitions alnum->identifier for the state
-        add_delimiters(dfa, curr_state, ID_DELIMITERS);
+        add_delimiters(dfa, curr_state, delimiters);
         set_transition(dfa, *token, curr_state, curr_state+1);
         set_state(dfa, curr_state, TOKEN_IDENTIFIER);
         // set a transition from the first uninitialized state to the next one

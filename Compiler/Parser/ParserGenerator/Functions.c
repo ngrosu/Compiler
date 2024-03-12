@@ -400,6 +400,13 @@ AVLNode* init_grammar()
     // assignment
     dec_arr[0] = TOKEN_IDENTIFIER; dec_arr[1] = TOKEN_EQUAL; dec_arr[2] = TOKEN_COUNT + SYMBOL_EXPRESSION; dec_arr[3] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ASSIGNMENT, dec_arr, 4, 0));
+    dec_arr[0] = TOKEN_COUNT + SYMBOL_ARR_ACC;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ASSIGNMENT, dec_arr, 4, 0));
+    // array access
+    dec_arr[0] = TOKEN_IDENTIFIER; dec_arr[1] = TOKEN_L_BRACKET; dec_arr[2] = TOKEN_COUNT + SYMBOL_EXPRESSION; dec_arr[3] = TOKEN_R_BRACKET;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ARR_ACC, dec_arr, 4, 0));
+
+
 
     // function declaration
     dec_arr[0] = TOKEN_COUNT + SYMBOL_TYPE; dec_arr[1] = TOKEN_IDENTIFIER; dec_arr[2] = TOKEN_COLON; dec_arr[3] = TOKEN_COUNT + SYMBOL_PARAMETERS; dec_arr[4] = TOKEN_COUNT + SYMBOL_RET_SCOPE;
@@ -471,6 +478,7 @@ AVLNode* init_grammar()
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_COUNT + SYMBOL_NUMBER, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_IDENTIFIER, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_COUNT + SYMBOL_FUNC_CALL, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_COUNT + SYMBOL_ARR_ACC, 0));
 
 
     // bool expression
