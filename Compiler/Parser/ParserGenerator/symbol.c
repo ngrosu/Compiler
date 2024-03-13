@@ -83,6 +83,10 @@ const char* get_symbol_name(int symbol)
             return "Arguments";
         case SYMBOL_OUTPUT:
             return "Output";
+        case SYMBOL_ARR_ACC:
+            return "Array Access";
+        case SYMBOL_INPUT:
+            return "Input";
     }
 
 }

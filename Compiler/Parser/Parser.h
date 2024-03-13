@@ -31,6 +31,12 @@ typedef struct parser{
 
 } *Parser, parserStruct;
 
+// helper functions for AST construction functions
+void ast_skip_items(Parser parser, int num);
+void ast_keep_items(Parser parser, ASTNode** children, int curr_index, int num);
+
+
+void init_AST_funcs();
 
 ASTNode *init_AST_node(int type, ASTNode **children, int num_of_children, Token token);
 

@@ -342,47 +342,54 @@ genDynArrPtr generate_items(AVLNode* grammar)
 AVLNode* init_grammar()
 {
     AVLNode* root = NULL;
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_START_TAG, TOKEN_COUNT+SYMBOL_START, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_START_TAG, TOKEN_COUNT + SYMBOL_START, 0));
     int arr1[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_STATEMENTS};
     // start
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_START, arr1, 1, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_START, arr1, 1, 0, FUNC_DIRECT_PASS));
 //    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_START, TOKEN_EOF, 0));
 
     // statement
     int arr2[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_COUNT + SYMBOL_END_STATEMENT};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, arr2, 2, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_DECLARATION, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_ASSIGNMENT, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_OUTPUT, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_IF, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_IF_ELSE, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_FOR, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_WHILE, 0));
-//    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_RETURN, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_SCOPE, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_END_STATEMENT, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, arr2, 2, 0, FUNC_KEEP_FIRST));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_DECLARATION, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_ASSIGNMENT, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_OUTPUT, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_INPUT, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_IF, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_IF_ELSE, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_FOR, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_WHILE, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_RETURN, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_SCOPE, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_END_STATEMENT, 0));
     // statements
     arr2[0] = SYMBOL_STATEMENTS + TOKEN_COUNT; arr2[1] = SYMBOL_STATEMENT + TOKEN_COUNT;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENTS, arr2, 2, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT+SYMBOL_STATEMENTS, TOKEN_COUNT+SYMBOL_STATEMENT, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENTS, arr2, 2, 0, FUNC_CHAIN));
+//    arr2[0] = SYMBOL_STATEMENT + TOKEN_COUNT; arr2[1] = SYMBOL_STATEMENT + TOKEN_COUNT;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENTS, arr2, 2, 0, FUNC_CHAIN));
+    arr2[0] = SYMBOL_STATEMENT + TOKEN_COUNT;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENTS, arr2, 1, 0, FUNC_DEFAULT));
 
 
     // output
     arr2[0] = TOKEN_OUTPUT; arr2[1] = TOKEN_COUNT + SYMBOL_EXPRESSION; arr2[2] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_OUTPUT, arr2, 3, 0));
-
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_OUTPUT, arr2, 3, 0, FUNC_REMOVE_EDGES));
+    arr2[0] = TOKEN_INPUT; arr2[1] = TOKEN_IDENTIFIER;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_INPUT, arr2, 3, 0, FUNC_REMOVE_EDGES));
+    arr2[1] = TOKEN_COUNT + SYMBOL_ARR_ACC;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_INPUT, arr2, 3, 0, FUNC_REMOVE_EDGES));
     // if statement
     int if_arr[MAX_RULE_SIZE] = {TOKEN_IF, TOKEN_L_PAREN, TOKEN_COUNT+SYMBOL_BOOL_EXPR, TOKEN_R_PAREN, TOKEN_COUNT + SYMBOL_SCOPE};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_IF, if_arr, 5, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_IF, if_arr, 5, 0, FUNC_REM_F_TWO_AND_SECOND_L));
     if_arr[0] = SYMBOL_IF + TOKEN_COUNT; if_arr[1] = TOKEN_ELSE; if_arr[2] = TOKEN_COUNT + SYMBOL_SCOPE;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_IF_ELSE, if_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_IF_ELSE, if_arr, 3, 0, FUNC_REM_SECOND_L_CHAIN));
 
     // while statement
     int while_arr[MAX_RULE_SIZE] = {TOKEN_WHILE, TOKEN_L_PAREN, TOKEN_COUNT+SYMBOL_BOOL_EXPR, TOKEN_R_PAREN, TOKEN_COUNT + SYMBOL_SCOPE};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_WHILE, while_arr, 5, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_WHILE, while_arr, 5, 0, FUNC_REM_F_TWO_AND_SECOND_L));
     // for statement
     int for_arr[MAX_RULE_SIZE] = {TOKEN_FOR, TOKEN_L_PAREN, TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_COUNT+SYMBOL_BOOL_EXPR, TOKEN_COUNT + SYMBOL_END_STATEMENT, TOKEN_COUNT+SYMBOL_STATEMENT, TOKEN_R_PAREN, TOKEN_COUNT + SYMBOL_SCOPE};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FOR, for_arr, 8, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FOR, for_arr, 8, 0, FUNC_FOR));
 
 
 
@@ -392,89 +399,98 @@ AVLNode* init_grammar()
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_DECLARATION, TOKEN_COUNT + SYMBOL_FUNC_DEC, 0));
 
     int dec_arr[MAX_RULE_SIZE] = {TOKEN_COUNT + SYMBOL_TYPE, TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_COUNT + SYMBOL_EXPRESSION, TOKEN_COUNT+SYMBOL_END_STATEMENT};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_VAR_DEC, dec_arr, 5, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_VAR_DEC, dec_arr, 5, 0, FUNC_REM_L_AND_THIRD_L));
     dec_arr[2] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_VAR_DEC, dec_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_VAR_DEC, dec_arr, 3, 0, FUNC_REMOVE_END));
     dec_arr[2] = TOKEN_L_BRACKET; dec_arr[3] = TOKEN_COUNT + SYMBOL_NUMBER; dec_arr[4] = TOKEN_R_BRACKET; dec_arr[5] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ARR_DEC, dec_arr, 6, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ARR_DEC, dec_arr, 6, 0, FUNC_REM_LAST_TWO_AND_FOURTH_L));
+    dec_arr[5] = TOKEN_EQUAL; dec_arr[6] = TOKEN_STRING_LITERAL; dec_arr[7] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ARR_DEC, dec_arr, 8, 0, FUNC_REM_L_THIRD_L_FOURTH_L_SIXTH_L));
     // assignment
     dec_arr[0] = TOKEN_IDENTIFIER; dec_arr[1] = TOKEN_EQUAL; dec_arr[2] = TOKEN_COUNT + SYMBOL_EXPRESSION; dec_arr[3] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ASSIGNMENT, dec_arr, 4, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ASSIGNMENT, dec_arr, 4, 0, FUNC_REM_L_AND_THIRD_L));
+    dec_arr[2] = TOKEN_COUNT + SYMBOL_BOOL_EXPR;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ASSIGNMENT, dec_arr, 4, 0, FUNC_REM_L_AND_THIRD_L));
     dec_arr[0] = TOKEN_COUNT + SYMBOL_ARR_ACC;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ASSIGNMENT, dec_arr, 4, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ASSIGNMENT, dec_arr, 4, 0, FUNC_REM_L_AND_THIRD_L));
+    dec_arr[2] = TOKEN_COUNT + SYMBOL_EXPRESSION;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ASSIGNMENT, dec_arr, 4, 0, FUNC_REM_L_AND_THIRD_L));
     // array access
     dec_arr[0] = TOKEN_IDENTIFIER; dec_arr[1] = TOKEN_L_BRACKET; dec_arr[2] = TOKEN_COUNT + SYMBOL_EXPRESSION; dec_arr[3] = TOKEN_R_BRACKET;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ARR_ACC, dec_arr, 4, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ARR_ACC, dec_arr, 4, 0, FUNC_REM_L_AND_THIRD_L));
 
 
 
     // function declaration
-    dec_arr[0] = TOKEN_COUNT + SYMBOL_TYPE; dec_arr[1] = TOKEN_IDENTIFIER; dec_arr[2] = TOKEN_COLON; dec_arr[3] = TOKEN_COUNT + SYMBOL_PARAMETERS; dec_arr[4] = TOKEN_COUNT + SYMBOL_RET_SCOPE;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 5, 0));
-    dec_arr[0] = TOKEN_VOID; dec_arr[4] = TOKEN_COUNT + SYMBOL_SCOPE;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 5, 0));
+    dec_arr[0] = TOKEN_COUNT + SYMBOL_TYPE; dec_arr[1] = TOKEN_IDENTIFIER; dec_arr[2] = TOKEN_COLON; dec_arr[3] = TOKEN_COUNT + SYMBOL_PARAMETERS; dec_arr[4] = TOKEN_COUNT + SYMBOL_SCOPE;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 5, 0, FUNC_REMOVE_THIRD));
+//    dec_arr[0] = TOKEN_VOID; dec_arr[4] = TOKEN_COUNT + SYMBOL_SCOPE;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 5, 0, FUNC_DEFAULT));
+//    dec_arr[2] = TOKEN_COUNT + SYMBOL_SCOPE;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 3, 0, FUNC_DEFAULT));
     dec_arr[2] = TOKEN_COUNT + SYMBOL_SCOPE;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 3, 0));
-    dec_arr[2] = TOKEN_COUNT + SYMBOL_RET_SCOPE; dec_arr[0] = TOKEN_COUNT + SYMBOL_TYPE;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_DEC, dec_arr, 3, 0, FUNC_DEFAULT));
 
 //    // function calls
     int func_arr[MAX_RULE_SIZE] = {TOKEN_IDENTIFIER, TOKEN_L_PAREN, TOKEN_R_PAREN, TOKEN_R_PAREN};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_CALL, func_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_CALL, func_arr, 3, 0, FUNC_KEEP_FIRST_INDIRECT));
     func_arr[2] = TOKEN_COUNT+SYMBOL_ARGUMENTS;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_CALL, func_arr, 4, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FUNC_CALL, func_arr, 4, 0, FUNC_REM_L_AND_THIRD_L));
     func_arr[0] = TOKEN_COUNT + SYMBOL_ARGUMENTS; func_arr[1] = TOKEN_COMMA; func_arr[2] = TOKEN_COUNT + SYMBOL_EXPRESSION;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ARGUMENTS, func_arr, 3, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_ARGUMENTS, TOKEN_COUNT + SYMBOL_EXPRESSION, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ARGUMENTS, func_arr, 3, 0, FUNC_REM_SECOND_L_CHAIN));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_ARGUMENTS, func_arr+2, 1, 0, FUNC_DEFAULT));
+    //root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_ARGUMENTS, TOKEN_COUNT + SYMBOL_EXPRESSION, 0));
 
     // scopes
     int scope_arr[MAX_RULE_SIZE] = {TOKEN_L_CURLY_B, TOKEN_COUNT + SYMBOL_STATEMENTS, TOKEN_R_CURLY_B};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_SCOPE, scope_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_SCOPE, scope_arr, 3, 0, FUNC_KEEP_SECOND));
     scope_arr[1] = TOKEN_R_CURLY_B;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_SCOPE, scope_arr, 2, 0));
-    scope_arr[1] = TOKEN_COUNT + SYMBOL_STATEMENTS; scope_arr[2] = TOKEN_COUNT + SYMBOL_RETURN; scope_arr[3] = TOKEN_R_CURLY_B;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_RET_SCOPE, scope_arr, 4, 0));
-    scope_arr[1] = TOKEN_L_CURLY_B;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_RET_SCOPE, scope_arr+1, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_SCOPE, scope_arr, 2, 0, FUNC_REMOVE_EDGES));
+
+//    scope_arr[1] = TOKEN_COUNT + SYMBOL_STATEMENTS; scope_arr[2] = TOKEN_COUNT + SYMBOL_RETURN; scope_arr[3] = TOKEN_R_CURLY_B;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENTS_WITH_RET, scope_arr, 2, 0, FUNC_REMOVE_EDGES));
+//    scope_arr[1] = TOKEN_L_CURLY_B;
+//    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_RET_SCOPE, scope_arr + 1, 3, 0, FUNC_REMOVE_EDGES));
     scope_arr[0] = TOKEN_RETURN; scope_arr[1] = TOKEN_COUNT + SYMBOL_EXPRESSION; scope_arr[2] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_RETURN, scope_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_RETURN, scope_arr, 3, 0, FUNC_REMOVE_EDGES));
 
 
 
     // parameter declaration
     int par_arr[NUM_OF_CHARS] = {TOKEN_COUNT + SYMBOL_PARAMETERS, TOKEN_COMMA, TOKEN_COUNT + SYMBOL_PARAMETER};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETERS, par_arr, 3, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETERS, TOKEN_COUNT + SYMBOL_PARAMETER, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETERS, par_arr, 3, 0, FUNC_REM_SECOND_L_CHAIN));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETERS, par_arr+2, 1, 0, FUNC_DEFAULT));
+    //root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETERS, TOKEN_COUNT + SYMBOL_PARAMETER, 0));
     par_arr[0] = TOKEN_COUNT + SYMBOL_TYPE; par_arr[1] = TOKEN_IDENTIFIER;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETER, par_arr, 2, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETER, par_arr, 2, 0, FUNC_CHAIN));
 
 
     // expressions
     int expr_arr[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_EXPRESSION, TOKEN_PLUS_OP, TOKEN_COUNT+SYMBOL_TERM};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, expr_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, expr_arr, 3, 0, FUNC_BINARY_INFIX));
     expr_arr[1] = TOKEN_MINUS_OP;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, expr_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, expr_arr, 3, 0, FUNC_BINARY_INFIX));
     expr_arr[1] = TOKEN_BITWISE_OR;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, expr_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, expr_arr, 3, 0, FUNC_BINARY_INFIX));
     expr_arr[0] = TOKEN_L_PAREN; expr_arr[1] = TOKEN_COUNT + SYMBOL_BOOL_EXPR; expr_arr[2] = TOKEN_R_PAREN;
 
 //    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, expr_arr, 3, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION,  TOKEN_COUNT + SYMBOL_TERM, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_EXPRESSION, TOKEN_COUNT + SYMBOL_TERM, 0));
 
     int term_arr[MAX_RULE_SIZE] = {TOKEN_COUNT+SYMBOL_TERM, TOKEN_ASTERISK, TOKEN_COUNT+SYMBOL_FACTOR};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0, FUNC_BINARY_INFIX));
     term_arr[1] = TOKEN_F_SLASH;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0, FUNC_BINARY_INFIX));
     term_arr[1] = TOKEN_BITWISE_AND;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0, FUNC_BINARY_INFIX));
     term_arr[1] = TOKEN_BITWISE_XOR;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TERM, TOKEN_COUNT+SYMBOL_FACTOR, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_TERM, term_arr, 3, 0, FUNC_BINARY_INFIX));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TERM, TOKEN_COUNT + SYMBOL_FACTOR, 0));
 
     int fact_arr[MAX_RULE_SIZE] = {TOKEN_L_PAREN, TOKEN_COUNT + SYMBOL_EXPRESSION, TOKEN_R_PAREN};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, fact_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, fact_arr, 3, 0, FUNC_PARENTHESES));
     fact_arr[0] = TOKEN_BITWISE_NOT; fact_arr[1] = TOKEN_COUNT + SYMBOL_FACTOR;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, fact_arr, 2, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, fact_arr, 2, 0, FUNC_CHAIN));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_COUNT + SYMBOL_NUMBER, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_IDENTIFIER, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_COUNT + SYMBOL_FUNC_CALL, 0));
@@ -483,20 +499,20 @@ AVLNode* init_grammar()
 
     // bool expression
     int bool_arr[MAX_RULE_SIZE] = {TOKEN_COUNT + SYMBOL_EXPRESSION, TOKEN_COUNT + SYMBOL_RELAT_OP, TOKEN_COUNT + SYMBOL_EXPRESSION};
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_RELAT_EXPR, bool_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_RELAT_EXPR, bool_arr, 3, 0, FUNC_BINARY_INFIX));
 
 
 //    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_EXPR, TOKEN_COUNT + SYMBOL_RELAT_EXPR, 0));
     bool_arr[0] = TOKEN_COUNT + SYMBOL_BOOL_EXPR; bool_arr[1] =  TOKEN_OR; bool_arr[2] = TOKEN_COUNT + SYMBOL_BOOL_TERM;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_EXPR, bool_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_EXPR, bool_arr, 3, 0, FUNC_BINARY_INFIX));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_EXPR, TOKEN_COUNT + SYMBOL_BOOL_TERM, 0));
     bool_arr[0] = TOKEN_COUNT + SYMBOL_BOOL_TERM; bool_arr[1] =  TOKEN_AND; bool_arr[2] = TOKEN_COUNT + SYMBOL_BOOL_FACTOR;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_TERM, bool_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_TERM, bool_arr, 3, 0, FUNC_BINARY_INFIX));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_TERM, TOKEN_COUNT + SYMBOL_BOOL_FACTOR, 0));
     bool_arr[0] = TOKEN_NOT; bool_arr[1] =  TOKEN_COUNT + SYMBOL_BOOL_FACTOR;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_FACTOR, bool_arr, 2, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_FACTOR, bool_arr, 2, 0, FUNC_CHAIN));
     bool_arr[0] = TOKEN_L_PAREN; bool_arr[1] =  TOKEN_COUNT + SYMBOL_BOOL_EXPR; bool_arr[2] = TOKEN_R_PAREN;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_FACTOR, bool_arr, 3, 0));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_FACTOR, bool_arr, 3, 0, FUNC_PARENTHESES));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_FACTOR, TOKEN_COUNT + SYMBOL_RELAT_EXPR, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_BOOL_FACTOR, TOKEN_COUNT + SYMBOL_EXPRESSION, 0));
 
@@ -515,6 +531,7 @@ AVLNode* init_grammar()
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_LONG, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_ULONG, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_CHAR, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_VOID, 0));
 
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_NUMBER, TOKEN_CHAR_LITERAL, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_NUMBER, TOKEN_INT_LITERAL, 0));

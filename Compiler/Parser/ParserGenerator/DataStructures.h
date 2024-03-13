@@ -16,10 +16,11 @@ typedef struct {
     short bodySize;
     short dot;
     int lookahead;
+    ASTFuncs ASTFunc;
 } *ProdRule, ProdRuleStruct;
 
 //create new production rule
-ProdRule init_prod_rule(int head, const int* body, short bodySize, short dot);
+ProdRule init_prod_rule(int head, const int *body, short bodySize, short dot, ASTFuncs ASTFunc);
 
 // init a prod rule with a single symbol body
 ProdRule init_short_prod_rule(int head, int body, short dot);

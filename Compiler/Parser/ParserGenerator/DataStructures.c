@@ -6,7 +6,7 @@
 
 // Prod Rules
 
-ProdRule init_prod_rule(int head, const int* body, short bodySize, short dot) // init a prod rule
+ProdRule init_prod_rule(int head, const int *body, short bodySize, short dot, ASTFuncs ASTFunc) // init a prod rule
 {
     ProdRule rule = malloc(sizeof(ProdRuleStruct)); // allocate space for rule
     rule->head = head;
@@ -17,6 +17,7 @@ ProdRule init_prod_rule(int head, const int* body, short bodySize, short dot) //
     rule->bodySize = bodySize;
     rule->dot = dot;
     rule->lookahead = 0;
+    rule->ASTFunc = ASTFunc;
     return rule;
 }
 
@@ -34,13 +35,15 @@ ProdRule init_LR1_item(int head, const int* body, short bodySize, short dot, int
     return rule;
 }
 
-ProdRule init_short_prod_rule(int head, int body, short dot) // init a prod rule with a single symbol body
+ProdRule
+init_short_prod_rule(int head, int body, short dot) // init a prod rule with a single symbol body
 {
     ProdRule rule = malloc(sizeof(ProdRuleStruct)); // allocate space for rule
     rule->head = head;
     rule->body[0] = body;
     rule->bodySize = 1;
     rule->dot = dot;
+    rule->ASTFunc = FUNC_DIRECT_PASS;
     return rule;
 }
 
