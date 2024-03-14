@@ -119,5 +119,8 @@ char* get_token_name(TokenType type)
             return "CHAR LITERAL";
         case TOKEN_OUTPUT:
             return "OUTPUT";
+        case TOKEN_INPUT:
+            return "INPUT";
     }
+    return "INVALID";
 }

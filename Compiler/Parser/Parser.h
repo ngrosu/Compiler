@@ -6,6 +6,7 @@
 #define COMPILER_PARSER_H
 
 #include "../Shared/token.h"
+#include "../Shared/hashtable.h"
 #include "ParserGenerator/DataStructures.h"
 #include "ParserGenerator/Functions.h"
 

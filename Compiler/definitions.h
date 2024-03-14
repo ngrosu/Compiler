@@ -16,6 +16,9 @@
 // LEXER
 #define TOKEN_MAXSIZE 64
 
+// HASH TABLE
+#define HASH_START_SIZE 10
+
 // TOKEN
 typedef enum
 {
