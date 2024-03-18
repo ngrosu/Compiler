@@ -85,13 +85,13 @@ void construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope, ScopeNode *globa
             }
             else { params = NULL; num_of_items=0; }
             item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type ,
-                                     SYMBOL_FUNC_DEC, params, num_of_items, 1, line);
+                                     SYMBOL_FUNC_DEC + TOKEN_COUNT, params, num_of_items, 1, line);
             add_item(scope->table, ast->children[1]->token->lexeme, item);
             new_node = init_scope_node(SCOPE_FUNCTION);
             for(int i = 0; i<num_of_items; i++)
             {
                 add_item(new_node->table,params[i].name,
-                         init_symbol_item(params[i].name, params[i].type, SYMBOL_VAR_DEC,
+                         init_symbol_item(params[i].name, params[i].type, SYMBOL_VAR_DEC + TOKEN_COUNT,
                                           NULL,0,1, line));
             }
             add_scope_child(scope, new_node);
@@ -103,14 +103,14 @@ void construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope, ScopeNode *globa
         case SYMBOL_ARR_DEC + TOKEN_COUNT:
             line = ast->children[0]->token->line;
             item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type ,
-                                    SYMBOL_ARR_DEC, NULL, 0, (int)strtol(ast->children[2]->token->lexeme,
+                                    SYMBOL_ARR_DEC + TOKEN_COUNT, NULL, 0, (int)strtol(ast->children[2]->token->lexeme,
                                                                          &temp_str, 10), line);
             add_item(scope->table, ast->children[1]->token->lexeme, item);
             break;
         case SYMBOL_VAR_DEC + TOKEN_COUNT:
             line = ast->children[0]->token->line;
             item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type ,
-                                    SYMBOL_VAR_DEC, NULL, 0, 1, line);
+                                    SYMBOL_VAR_DEC + TOKEN_COUNT, NULL, 0, 1, line);
             add_item(scope->table, ast->children[1]->token->lexeme, item);
             break;
         case SYMBOL_WHILE + TOKEN_COUNT:
@@ -169,6 +169,8 @@ void print_scope_tree(ScopeNode *node, int depth, char *finals)
 
         printf("───");  // afterward, print out sideways connection lines for the current node's symbol
     }
+    else
+    printf("%*s", 4, "");
     {  // if non-terminal, print out the symbol name,
         printf(" %d\n", node->scope);
         for(int x = 0; x < node->table->array_size; x++)
@@ -184,7 +186,8 @@ void print_scope_tree(ScopeNode *node, int depth, char *finals)
                         printf("%*s", 6, " ");
                 }
                 hash_table_item* item = bucket->data;
-                printf("%*s:%s\n", 6, "", (char*)item->key);
+                symbol_item* sItem = item->data;
+                printf("%*s:%s -> %s %s l: %d\n", 6, "", (char*)item->key, get_symbol_name(sItem->type[0]), get_symbol_name(sItem->type[1]), sItem->size);
                 bucket = bucket->next;
             }
         }

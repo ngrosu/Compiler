@@ -17,6 +17,19 @@ ASTNode *init_AST_node(int type, ASTNode **children, int num_of_children, Token 
     return node;
 }
 
+void delete_AST(ASTNode* node)
+{
+    if(node == NULL)
+    {return;}
+    for(int i = 0; i < node->num_of_children; i++)
+    {
+        delete_AST(node->children[i]);
+    }
+    if(node->num_of_children == 0)
+    { delete_token(node->token);}
+    free(node);
+}
+
 //int get_AST_height()
 
 void printAST(ASTNode *node, int depth, char *finals)
@@ -384,11 +397,19 @@ void init_AST_funcs()
     reductionFuncs[FUNC_REMOVE_THIRD] = ast_remove_third;
 }
 
-void parse(Parser parser)
+void parse_error_recovery(Parser parser, unsigned int* s, unsigned int symbol)
+{
+    push(parser->stack, NULL); // push a NULL symbol onto the stack
+    push_int(parser->stack, *s); // push back onto the stack the state that was last popped
+    *s = parser->goto_table[*s][symbol];
+    push(parser->stack, NULL); // push a NULL symbol onto the stack
+    push_int(parser->stack, *s); // push the new state onto the stack from the goto table
+}
+
+char parse(Parser parser)
 {
     char run = 1;
     char error = 0;
-
     Actions action;
     unsigned int num;
     ProdRule rule;
@@ -407,8 +428,52 @@ void parse(Parser parser)
             case ACTION_ERROR: // if the action is error, report it and stop the loop
                 report_error(ERR_SYNTAX, (*parser->tokens)->line,"Unexpected token | " ,
                              get_symbol_name((*parser->tokens)->type));
-                error = 1;
-                run=0;
+                error = 1; // mark that an error has occurred
+                unsigned int* s;
+                int discard = 1;
+                while(discard)  // loop for discarding stack states
+                {
+                    s = pop(parser->stack); // get the current state
+                    delete_AST(pop(parser->stack)); // discard the symbol on the stack
+                    // check if for the current state (s), there exists a goto to statement expression or scope
+                    if(parser->goto_table[*s][SYMBOL_STATEMENT])
+                    {
+                        discard=0;
+                        parse_error_recovery(parser, s, SYMBOL_STATEMENT);
+                    }
+                    else if (parser->goto_table[*s][SYMBOL_EXPRESSION])
+                    {
+                        discard=0;
+                        parse_error_recovery(parser, s, SYMBOL_EXPRESSION);
+
+                    }
+                    else if (parser->goto_table[*s][SYMBOL_SCOPE])
+                    {
+                        discard=0;
+                        parse_error_recovery(parser, s, SYMBOL_SCOPE);
+                    }
+                    free(s);
+                }
+                discard = 1;
+                while(discard) // loop for discarding input tokens
+                {
+                    if(*parser->tokens == NULL) // make sure the end of the input isn't reached
+                    {
+                        run=0;
+                    }
+                    else
+                    {
+                        stack_peek = *(unsigned int *) (parser->stack->content->data); // get the top value of the stack
+                        if (parser->action_table[stack_peek][(*parser->tokens)->type * 2] != 0)
+                            // check if the next token in the input can be a valid continuation from the current state
+                            discard = 0; // if it is, stop discarding
+                        else
+                        {
+                            delete_token(*parser->tokens);
+                            parser->tokens++;
+                        }
+                    }
+                }
                 break;
             case ACTION_SHIFT: // if the action is shift, push the input token onto the stack as a node of the AST
                 push(parser->stack, init_AST_node((*parser->tokens)->type, NULL, 0, *parser->tokens));
@@ -417,7 +482,10 @@ void parse(Parser parser)
                 break;
             case ACTION_REDUCE:  // if the action is reduce get the rule from index action value,
                 rule = ((ProdRule*)parser->grammar->array)[num];  // and save it for easy access
-                node = reductionFuncs[rule->ASTFunc](parser);
+                if(error)
+                {node = reductionFuncs[FUNC_DEFAULT](parser);}
+                else
+                { node = reductionFuncs[rule->ASTFunc](parser); }
                 current_state = *(unsigned int*)(parser->stack->content->data);
                 current_state=parser->goto_table[current_state][rule->head-TOKEN_COUNT]; // update state with goto_table
                 push(parser->stack, node);// push the reduced node onto the stack
@@ -428,5 +496,6 @@ void parse(Parser parser)
                 break;
         }
     }
+    return error;
 }
 

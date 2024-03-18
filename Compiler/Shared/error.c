@@ -33,6 +33,6 @@ void report_error(ErrorCode code, unsigned int line, const char *message, const 
 
     fprintf(stderr, "[%s] at line %d: %s", errorString, line, message);
     if(extra!=NULL)
-    fprintf(stderr, "%s", extra);
+        fprintf(stderr, "%s", extra);
     fprintf(stderr, "\n");
 }

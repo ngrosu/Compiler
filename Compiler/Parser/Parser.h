@@ -41,11 +41,13 @@ void init_AST_funcs();
 
 ASTNode *init_AST_node(int type, ASTNode **children, int num_of_children, Token token);
 
+void delete_AST(ASTNode* node);
+
 Parser
 init_parser(Token *tokens, unsigned int num_of_tokens, genDynArrPtr grammar, char load, char save, char *action_fp,
             char *goto_fp);
 
-void parse(Parser parser);
+char parse(Parser parser);
 
 
 #endif //COMPILER_PARSER_H

@@ -2,15 +2,14 @@
 // Created by Nimrod on 29/01/2024.
 //
 
-#include "../Shared/error.h"
+#ifndef COMPILER_LEXER_H
+#define COMPILER_LEXER_H
 #include "../definitions.h"
 #include "dfa_table.h"
+#include "../Shared/error.h"
 #include "../Shared/token.h"
 
 #include <stdio.h>
-
-#ifndef COMPILER_LEXER_H
-#define COMPILER_LEXER_H
 
 typedef struct {
     DFA dfa;
