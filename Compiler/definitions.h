@@ -18,6 +18,7 @@
 
 // HASH TABLE
 #define HASH_START_SIZE 10
+#define DISABLE_HASH_ADD_WARNING 1
 
 // SYMBOL TABLE
 typedef enum

@@ -42,7 +42,7 @@ init_symbol_item(char *name, int data_type, int symbol_type, Param *parameters, 
 
 Param* init_params(ASTNode* params);
 
-void construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope, ScopeNode *global);
+char construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope, ScopeNode *global);
 
 void print_scope_tree(ScopeNode *node, int depth, char *finals);
 

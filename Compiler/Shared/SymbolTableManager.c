@@ -64,16 +64,18 @@ Param* init_params(ASTNode* params)
     return result;
 }
 
-void construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope, ScopeNode *global)
+char construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope, ScopeNode *global)
 {
     if (ast == NULL)
-    {return;}
+    {return 1;}
     char* temp_str;
     Param* params;
     int num_of_items;
     unsigned int line;
     symbol_item* item;
     ScopeNode* new_node;
+    char item_added_success = 0;
+    char error = 0;
     switch (ast->type)
     {
         case SYMBOL_FUNC_DEC + TOKEN_COUNT:
@@ -86,13 +88,23 @@ void construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope, ScopeNode *globa
             else { params = NULL; num_of_items=0; }
             item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type ,
                                      SYMBOL_FUNC_DEC + TOKEN_COUNT, params, num_of_items, 1, line);
-            add_item(scope->table, ast->children[1]->token->lexeme, item);
+            item_added_success = add_item(scope->table, ast->children[1]->token->lexeme, item);
+            printf("%s: %lu\n", ast->children[1]->token->lexeme, scope->table->hash(ast->children[1]->token->lexeme));
+            if (!item_added_success) {
+                error = 1;
+                report_error(ERR_SEMANTIC, line, "Symbol Already Declared | ", item->name);
+            }
             new_node = init_scope_node(SCOPE_FUNCTION);
             for(int i = 0; i<num_of_items; i++)
             {
-                add_item(new_node->table,params[i].name,
-                         init_symbol_item(params[i].name, params[i].type, SYMBOL_VAR_DEC + TOKEN_COUNT,
-                                          NULL,0,1, line));
+                item = init_symbol_item(params[i].name, params[i].type, SYMBOL_VAR_DEC + TOKEN_COUNT,
+                                        NULL,0,1, line);
+                item_added_success = add_item(new_node->table,params[i].name, item);
+                printf("%s: %lu\n", params[i].name, scope->table->hash(params[i].name));
+                if (!item_added_success) {
+                    error = 1;
+                    report_error(ERR_SEMANTIC, line, "Symbol Already Declared | ", item->name);
+                }
             }
             add_scope_child(scope, new_node);
             if(num_of_items==0)
@@ -105,13 +117,22 @@ void construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope, ScopeNode *globa
             item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type ,
                                     SYMBOL_ARR_DEC + TOKEN_COUNT, NULL, 0, (int)strtol(ast->children[2]->token->lexeme,
                                                                          &temp_str, 10), line);
-            add_item(scope->table, ast->children[1]->token->lexeme, item);
+            item_added_success = add_item(scope->table, ast->children[1]->token->lexeme, item);
+            if (!item_added_success) {
+                error = 1;
+                report_error(ERR_SEMANTIC, line, "Symbol Already Declared | ", item->name);
+            }
             break;
         case SYMBOL_VAR_DEC + TOKEN_COUNT:
             line = ast->children[0]->token->line;
             item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type ,
                                     SYMBOL_VAR_DEC + TOKEN_COUNT, NULL, 0, 1, line);
-            add_item(scope->table, ast->children[1]->token->lexeme, item);
+            item_added_success = add_item(scope->table, ast->children[1]->token->lexeme, item);
+            printf("%s: %lu\n",ast->children[1]->token->lexeme, scope->table->hash(ast->children[1]->token->lexeme));
+            if (!item_added_success) {
+                error = 1;
+                report_error(ERR_SEMANTIC, line, "Symbol Already Declared | ", item->name);
+            }
             break;
         case SYMBOL_WHILE + TOKEN_COUNT:
             new_node = init_scope_node(SCOPE_LOOP);
@@ -144,6 +165,7 @@ void construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope, ScopeNode *globa
             construct_symbol_table_rec(ast->children[2], new_node, global);
             break;
     }
+    return (char)!error;
 }
 
 

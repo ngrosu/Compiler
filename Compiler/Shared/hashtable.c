@@ -110,7 +110,7 @@ char add_item(hash_table *table, void *key, void *item)
         return 1;
     }
     char check = 0;
-    while(bucket->next!=NULL && check == 0)
+    while(bucket !=NULL && check == 0)
     {
         int cmp = table->compare(key, ((hash_table_item*)bucket->data)->key);
         if (cmp==0)
@@ -120,7 +120,8 @@ char add_item(hash_table *table, void *key, void *item)
     }
     if(check)
     {
-        report_error(ERR_INTERNAL, -1, "TRIED TO ADD EXISTING ITEM TO HASH TABLE", NULL);
+        if (!DISABLE_HASH_ADD_WARNING)
+            report_error(ERR_INTERNAL, -1, "TRIED TO ADD EXISTING ITEM TO HASH TABLE", NULL);
         return 0;}
     else
     {
