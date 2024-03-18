@@ -92,6 +92,10 @@ void init_DFA(DFA dfa)
 
 
 
+    // starting with b
+    add_alnum_token_to_DFA(dfa, "break", TOKEN_BREAK, START_STATE, stddelimiter);
+
+
     // starting with i
     add_alnum_token_to_DFA(dfa, "if", TOKEN_IF, START_STATE, stddelimiter);
     add_alnum_token_to_DFA(dfa, "nt", TOKEN_INT, dfa->num_of_states-2, stddelimiter);

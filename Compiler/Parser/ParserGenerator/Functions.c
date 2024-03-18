@@ -355,6 +355,7 @@ AVLNode* init_grammar()
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_ASSIGNMENT, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_OUTPUT, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_INPUT, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_BREAK, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_IF, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_IF_ELSE, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENT, TOKEN_COUNT + SYMBOL_FOR, 0));
@@ -371,13 +372,15 @@ AVLNode* init_grammar()
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_STATEMENTS, arr2, 1, 0, FUNC_DEFAULT));
 
 
-    // output
+    // keywords
     arr2[0] = TOKEN_OUTPUT; arr2[1] = TOKEN_COUNT + SYMBOL_EXPRESSION; arr2[2] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_OUTPUT, arr2, 3, 0, FUNC_REMOVE_EDGES));
     arr2[0] = TOKEN_INPUT; arr2[1] = TOKEN_IDENTIFIER;
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_INPUT, arr2, 3, 0, FUNC_REMOVE_EDGES));
     arr2[1] = TOKEN_COUNT + SYMBOL_ARR_ACC;
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_INPUT, arr2, 3, 0, FUNC_REMOVE_EDGES));
+    arr2[0] = TOKEN_BREAK; arr2[1] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_BREAK, arr2, 2, 0, FUNC_REMOVE_END));
     // if statement
     int if_arr[MAX_RULE_SIZE] = {TOKEN_IF, TOKEN_L_PAREN, TOKEN_COUNT+SYMBOL_BOOL_EXPR, TOKEN_R_PAREN, TOKEN_COUNT + SYMBOL_SCOPE};
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_IF, if_arr, 5, 0, FUNC_REM_F_TWO_AND_SECOND_L));

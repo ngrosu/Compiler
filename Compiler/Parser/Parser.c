@@ -100,7 +100,6 @@ ASTNode* binary_infix(Parser parser)
 ASTNode* parentheses(Parser parser)
 {
     ASTNode* result;
-    ASTNode* node;
     ast_skip_items(parser, 1);
 
     free(pop(parser->stack));
@@ -199,14 +198,13 @@ ASTNode* ast_remove_edges(Parser parser) {
     ast_keep_items(parser, children, rule->bodySize-3, rule->bodySize-2);
     ast_skip_items(parser,1);
     return init_AST_node(rule->head, children,rule->bodySize-2, NULL);
-};
+}
 
 ASTNode* remove_first2_and_second_last(Parser parser)
 {
     unsigned int stack_peek = *(unsigned int*)(parser->stack->content->data);
     unsigned int num = parser->action_table[stack_peek][((*parser->tokens)->type*2)+1];  // check the rule num
     ProdRule rule = ((ProdRule*)parser->grammar->array)[num];
-    ASTNode* node;
     ASTNode **children = malloc((rule->bodySize-3) * (sizeof(ASTNode *))); // malloc for the AST node children
 
 
@@ -395,7 +393,6 @@ void parse(Parser parser)
     unsigned int num;
     ProdRule rule;
     unsigned int current_state;
-    ASTNode** children = NULL;
     ASTNode* node;
 
     push_int(parser->stack, 0);
@@ -430,7 +427,6 @@ void parse(Parser parser)
                 run=0;
                 break;
         }
-
     }
 }
 

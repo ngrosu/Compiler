@@ -2,6 +2,7 @@
 #include "Lexer/dfa_table.h"
 #include "Lexer/lexer.h"
 #include "Shared/token.h"
+#include "Shared/SymbolTableManager.h"
 #include "Parser/ParserGenerator/DataStructures.h"
 #include "Parser/Parser.h"
 #include "Parser/ParserGenerator/Functions.h"
@@ -78,7 +79,8 @@ int main()
 
     Lexer lexer = init_lexer("../../test.chad");
 //    print_transition_matrix(lexer->dfa);
-    tokenize(lexer);
+    if(!tokenize(lexer))
+    {exit(0);}
     //in_order(init_grammar());
 //    in_order(init_grammar());
     //generate_items(init_grammar());
@@ -109,7 +111,10 @@ int main()
     pop(parser->stack);
     printf("\nprinting:\n");
     char arr[50] = {0};
-    printAST((ASTNode *) (parser->stack->content->data), 0, arr);
+    ScopeNode* t = init_scope_node(SCOPE_GLOBAL);
+    construct_symbol_table_rec((ASTNode *) (parser->stack->content->data), t, t);
+    print_scope_tree(t, 0, arr);
+    //printAST((ASTNode *) (parser->stack->content->data), 0, arr);
 
 
 

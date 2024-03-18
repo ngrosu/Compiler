@@ -78,6 +78,14 @@ Token get_next_token(Lexer lexer)
             case 0:
             {
                 lexer->token_buffer[lexeme_length++] = (char)chr;
+                while(!(chr == ' ' || chr == '\n' || chr == '\t' || chr == '\r' || chr == '\v' || chr == '\f'))
+                {
+                    chr = fgetc(lexer->file);
+                    lexer->token_buffer[lexeme_length] = (char)chr;
+                    lexeme_length++;
+                }
+                ungetc(chr, lexer->file);
+                lexer->token_buffer[--lexeme_length] = '\0';
                 report_error(ERR_LEXICAL, lexer->curr_line, lexer->token_buffer, NULL);
                 return init_token(TOKEN_ERROR, lexer->token_buffer, lexer->curr_line);
             }
@@ -118,8 +126,9 @@ void print_tokens(Lexer lexer)
     }
 }
 
-void tokenize(Lexer lexer)
+char tokenize(Lexer lexer)
 {
+    char error = 0;
     char run=1;
     while (run)
     {
@@ -131,11 +140,12 @@ void tokenize(Lexer lexer)
         if(next_token->type == 0) // if it's a token error, report an error
         {
             report_error(ERR_LEXICAL, lexer->curr_line, "Invalid Token/Unexpected character", NULL);
-            exit(1); // exit_lexer()
+            error = 1; // exit_lexer()
         }
         add_token(lexer, next_token); // add the token to the lexer
         if(next_token->type == TOKEN_EOF)
         { run = 0; } // in the case of an EOF token, stop reading for more tokens
 
     }
+    return (!error);
 }

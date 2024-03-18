@@ -30,7 +30,7 @@ void skip_whitespaces(Lexer); // advance the file until the next non-whitespace
 
 void print_tokens(Lexer);
 
-void tokenize(Lexer);
+char tokenize(Lexer);
 
 void add_token(Lexer, Token); // add a token to the lexers tokens array
 

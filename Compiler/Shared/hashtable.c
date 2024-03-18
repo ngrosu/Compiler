@@ -41,8 +41,8 @@ hash_table_item* init_hash_table_item(void* key, void* data)
 
 void resize_hash_table(hash_table* table)
 {
-    LinkedList** new = calloc(table->array_size*2, sizeof(LinkedList*));
-    unsigned int newSize = table->array_size*2;
+    LinkedList** new = calloc(table->array_size<<1, sizeof(LinkedList*));
+    unsigned int newSize = table->array_size<<1;
     if(new == NULL)
     {
         report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE MEMORY WHEN RESIZING HASH TABLE", NULL);

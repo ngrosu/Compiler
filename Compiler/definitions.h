@@ -19,6 +19,16 @@
 // HASH TABLE
 #define HASH_START_SIZE 10
 
+// SYMBOL TABLE
+typedef enum
+{
+    SCOPE_GLOBAL,
+    SCOPE_GENERIC,
+    SCOPE_LOOP,
+    SCOPE_FUNCTION
+} ScopeType;
+
+
 // TOKEN
 typedef enum
 {
@@ -50,6 +60,7 @@ typedef enum
     TOKEN_WHILE,
     TOKEN_FOR,
     TOKEN_RETURN,
+    TOKEN_BREAK,
     TOKEN_OUTPUT,
     TOKEN_INPUT,
     TOKEN_INT,
@@ -88,6 +99,7 @@ typedef enum {
     SYMBOL_FOR,
     SYMBOL_WHILE,
     SYMBOL_RETURN,
+    SYMBOL_BREAK,
     SYMBOL_SCOPE,
     SYMBOL_RET_SCOPE,
     SYMBOL_PARAMETERS,
