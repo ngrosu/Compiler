@@ -456,6 +456,8 @@ AVLNode* init_grammar()
 //    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_RET_SCOPE, scope_arr + 1, 3, 0, FUNC_REMOVE_EDGES));
     scope_arr[0] = TOKEN_RETURN; scope_arr[1] = TOKEN_COUNT + SYMBOL_EXPRESSION; scope_arr[2] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_RETURN, scope_arr, 3, 0, FUNC_REMOVE_EDGES));
+    scope_arr[1] = TOKEN_COUNT + SYMBOL_END_STATEMENT;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_RETURN, scope_arr, 2, 0, FUNC_REMOVE_EDGES));
 
 
 
@@ -493,6 +495,10 @@ AVLNode* init_grammar()
     int fact_arr[MAX_RULE_SIZE] = {TOKEN_L_PAREN, TOKEN_COUNT + SYMBOL_EXPRESSION, TOKEN_R_PAREN};
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, fact_arr, 3, 0, FUNC_PARENTHESES));
     fact_arr[0] = TOKEN_BITWISE_NOT; fact_arr[1] = TOKEN_COUNT + SYMBOL_FACTOR;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, fact_arr, 2, 0, FUNC_CHAIN));
+    fact_arr[0] = TOKEN_MINUS_OP; fact_arr[1] = TOKEN_COUNT + SYMBOL_FACTOR;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, fact_arr, 2, 0, FUNC_CHAIN));
+    fact_arr[0] = TOKEN_PLUS_OP; fact_arr[1] = TOKEN_COUNT + SYMBOL_FACTOR;
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, fact_arr, 2, 0, FUNC_CHAIN));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_COUNT + SYMBOL_NUMBER, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_FACTOR, TOKEN_IDENTIFIER, 0));
@@ -535,8 +541,8 @@ AVLNode* init_grammar()
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_ULONG, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_CHAR, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_VOID, 0));
-
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_NUMBER, TOKEN_CHAR_LITERAL, 0));
+    arr1[0] = TOKEN_CHAR_LITERAL;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_NUMBER, arr1, 1, 0, FUNC_CHAR));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_NUMBER, TOKEN_INT_LITERAL, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_END_STATEMENT, TOKEN_SEMICOLON, 0));
 

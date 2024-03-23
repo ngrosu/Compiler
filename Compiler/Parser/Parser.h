@@ -14,7 +14,7 @@ typedef struct ASTNode{
     struct ASTNode** children;
     int num_of_children;
     int type;
-    int id;
+    unsigned long start_line;
     Token token;
 } ASTNode;
 
@@ -35,11 +35,11 @@ typedef struct parser{
 // helper functions for AST construction functions
 void ast_skip_items(Parser parser, int num);
 void ast_keep_items(Parser parser, ASTNode** children, int curr_index, int num);
-
+ASTNode* peak_ast_symbol(Parser parser);
 
 void init_AST_funcs();
 
-ASTNode *init_AST_node(int type, ASTNode **children, int num_of_children, Token token);
+ASTNode *init_AST_node(int type, ASTNode **children, int num_of_children, Token token, unsigned long line);
 
 void delete_AST(ASTNode* node);
 

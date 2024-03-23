@@ -45,6 +45,17 @@ void skip_whitespaces(Lexer lexer)
     ungetc(c, lexer->file);
 }
 
+void skip_to_whitespace(Lexer lexer)
+{
+    int c;
+    c = fgetc(lexer->file); // check c against all whitespace characters
+    while(!(c == ' ' || c == '\n' || c == '\t' || c == '\r' || c == '\v' || c == '\f'))
+    {
+        c = fgetc(lexer->file);
+    }
+    ungetc(c, lexer->file);
+}
+
 void add_token(Lexer lexer, Token token)
 {
     if (lexer->num_of_tokens+1 > lexer->tokens_allocated_size)
@@ -63,15 +74,30 @@ void add_token(Lexer lexer, Token token)
     lexer->num_of_tokens++;
 }
 
+void panic_mode(Lexer lexer, char chr, int lexeme_length)
+{
+
+    while(!(chr == ' ' || chr == '\n' || chr == '\t' || chr == '\r' || chr == '\v' || chr == '\f'))
+    {
+        chr = fgetc(lexer->file);
+        lexer->token_buffer[lexeme_length] = (char)chr;
+        lexeme_length++;
+    }
+    ungetc(chr, lexer->file);
+    lexer->token_buffer[--lexeme_length] = '\0';
+    report_error(ERR_LEXICAL, lexer->curr_line, lexer->token_buffer, NULL);
+}
+
 Token get_next_token(Lexer lexer)
 {
     memset(lexer->token_buffer, 0, sizeof(lexer->token_buffer)); // reset the lexer token buffer
     int lexeme_length=0;
+    int is_too_long=0;
     int chr;
     StatesInt temp_state;
     StatesInt state = 1;
     chr = fgetc(lexer->file); // get the next character
-    while (chr != EOF && lexeme_length < TOKEN_MAXSIZE) //
+    while (chr != EOF) //
     {
         temp_state = lexer->dfa->transition_matrix[state][chr];
         switch (temp_state) {
@@ -83,6 +109,13 @@ Token get_next_token(Lexer lexer)
                     chr = fgetc(lexer->file);
                     lexer->token_buffer[lexeme_length] = (char)chr;
                     lexeme_length++;
+                    if(!(lexeme_length < TOKEN_MAXSIZE))
+                    {
+                        skip_to_whitespace(lexer);
+                        report_error(ERR_LEXICAL, lexer->curr_line, lexer->token_buffer, NULL);
+                        report_error(ERR_LEXICAL, lexer->curr_line, lexer->token_buffer, "\nTOKEN IS TOO LONG");
+                        return init_token(TOKEN_ERROR, lexer->token_buffer, lexer->curr_line);
+                    }
                 }
                 ungetc(chr, lexer->file);
                 lexer->token_buffer[--lexeme_length] = '\0';
@@ -95,6 +128,12 @@ Token get_next_token(Lexer lexer)
 
             }
 
+        }
+        if(!(lexeme_length < TOKEN_MAXSIZE))
+        {
+            skip_to_whitespace(lexer);
+            report_error(ERR_LEXICAL, lexer->curr_line, lexer->token_buffer, "\nTOKEN IS TOO LONG");
+            return init_token(TOKEN_ERROR, lexer->token_buffer, lexer->curr_line);
         }
         state = temp_state;
         lexer->token_buffer[lexeme_length] = (char)chr;

@@ -27,6 +27,8 @@ Token get_next_token(Lexer);
 
 void skip_whitespaces(Lexer); // advance the file until the next non-whitespace
 
+void skip_to_whitespace(Lexer lexer); // advance the file until the next whitespace
+
 void print_tokens(Lexer);
 
 char tokenize(Lexer);

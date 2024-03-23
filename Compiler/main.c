@@ -6,6 +6,7 @@
 #include "Parser/ParserGenerator/DataStructures.h"
 #include "Parser/Parser.h"
 #include "Parser/ParserGenerator/Functions.h"
+#include "SemanticAnalyzer/Semantic.h"
 
 int main1()
 {
@@ -111,11 +112,11 @@ int main()
     pop(parser->stack);
     printf("\nprinting:\n");
     char arr[50] = {0};
-    ScopeNode* t = init_scope_node(SCOPE_GLOBAL);
-    construct_symbol_table_rec((ASTNode *) (parser->stack->content->data), t, t);
+    ScopeNode* t = init_scope_node(SCOPE_GLOBAL, TOKEN_ERROR);
+    construct_symbol_table_rec((ASTNode *) (parser->stack->content->data), t);
     print_scope_tree(t, 0, arr);
-    //printAST((ASTNode *) (parser->stack->content->data), 0, arr);
-
+    printAST((ASTNode *) (parser->stack->content->data), 0, arr);
+    analyze_statements(parser->stack->content->data, t);
 
 
 

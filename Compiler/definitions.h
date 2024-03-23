@@ -11,6 +11,7 @@
 #define START_STATE 1
 #define DELIMITER_STATE 2
 #define IDENTIFIER_STATE 3
+#define NUMBER_STATE 4
 
 
 // LEXER
@@ -156,6 +157,7 @@ typedef enum {
     FUNC_REMOVE_EDGES,
     FUNC_REMOVE_THIRD,
     FUNC_FOR,
+    FUNC_CHAR,
     FUNCS_COUNT
 } ASTFuncs;
 // PARSER
@@ -169,7 +171,8 @@ typedef enum {
     ERR_SEMANTIC,       // Semantic error
     ERR_UNDEFINED_VAR,  // Undefined variable
     ERR_TYPE_MISMATCH,  // Type mismatch in expressions
-    ERR_INTERNAL        // Internal compiler error
+    ERR_INTERNAL,        // Internal compiler error
+    ERR_WARNING
 } ErrorCode;
 
 #endif //COMPILER_DEFINITIONS_H

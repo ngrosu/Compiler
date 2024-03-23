@@ -6,7 +6,8 @@
 #include<unistd.h>
 
 
-ASTNode *init_AST_node(int type, ASTNode **children, int num_of_children, Token token)
+
+ASTNode *init_AST_node(int type, ASTNode **children, int num_of_children, Token token, unsigned long line)
 {
     ASTNode* node = malloc(sizeof(ASTNode));
     if(node==NULL) { report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE AST node MEMORY", NULL); return NULL;}
@@ -14,6 +15,11 @@ ASTNode *init_AST_node(int type, ASTNode **children, int num_of_children, Token 
     node->children = children;
     node->num_of_children = num_of_children;
     node->token=token;
+    if(token)
+        node->start_line=token->line;
+    else
+        node->start_line = line;
+
     return node;
 }
 
@@ -67,11 +73,11 @@ void printAST(ASTNode *node, int depth, char *finals)
             default:
                 break;
         }
-        printf("\n");
+        printf(" | LINE: %lu\n", node->start_line);
     }
     else
     {  // if non-terminal, print out the symbol name,
-        printf(" %s\n", get_symbol_name(node->type));
+        printf(" %s | LINE: %lu\n", get_symbol_name(node->type), node->start_line);
         // mark the current depth as unfinished
         finals[depth] = 0;
         for(int j = 0; j < node->num_of_children-1; j++)  // call the function for all except for last of the children
@@ -108,7 +114,7 @@ ASTNode* binary_infix(Parser parser)
         arr[i] = (ASTNode *) pop(parser->stack);
     }
     children[0] = arr[0]; children[1] = arr[2];
-    return init_AST_node(arr[1]->type, children, 2, arr[1]->token);
+    return init_AST_node(arr[1]->type, children, 2, arr[1]->token, arr[0]->start_line);
 }
 ASTNode* parentheses(Parser parser)
 {
@@ -139,7 +145,7 @@ ASTNode* ast_default(Parser parser)
         children[i] = (ASTNode *) pop(parser->stack);  // afterward, pop and add to children
         // this is done since the stack is pushed onto in pairs, with the state on top and the node under
     }
-    return init_AST_node(rule->head, children,rule->bodySize, NULL);
+    return init_AST_node(rule->head, children, rule->bodySize, NULL, children[0]->start_line);
 }
 ASTNode* ast_chain(Parser parser)
 {
@@ -162,9 +168,11 @@ ASTNode* ast_remove_end(Parser parser)
     unsigned int num = parser->action_table[stack_peek][((*parser->tokens)->type*2)+1];  // check the rule num
     ProdRule rule = ((ProdRule*)parser->grammar->array)[num];
     ASTNode **children = malloc((rule->bodySize-1) * (sizeof(ASTNode *))); // malloc for the AST node children
+    unsigned long line = peak_ast_symbol(parser)->start_line;
     ast_skip_items(parser, 1);
     ast_keep_items(parser, children, rule->bodySize-2, rule->bodySize-1);
-    return init_AST_node(rule->head, children,rule->bodySize-1, NULL);
+    if(children != NULL) {line = children[0]->start_line;}
+    return init_AST_node(rule->head, children, rule->bodySize - 1, NULL, line);
 
 }
 ASTNode* ast_keep_first(Parser parser)
@@ -185,7 +193,7 @@ ASTNode* ast_keep_first_indirect(Parser parser)
     ASTNode** child = malloc(sizeof(ASTNode*));
     ast_skip_items(parser, rule->bodySize-1);
     ast_keep_items(parser, child, 0, 1);
-    return init_AST_node(rule->head,child, 1, NULL);
+    return init_AST_node(rule->head, child, 1, NULL, child[0]->start_line);
 
 }
 ASTNode* ast_keep_second(Parser parser)
@@ -206,11 +214,11 @@ ASTNode* ast_remove_edges(Parser parser) {
     unsigned int num = parser->action_table[stack_peek][((*parser->tokens)->type*2)+1];  // check the rule num
     ProdRule rule = ((ProdRule*)parser->grammar->array)[num];
     ASTNode **children = malloc((rule->bodySize-2) * (sizeof(ASTNode *))); // malloc for the AST node children
-
     ast_skip_items(parser, 1);
     ast_keep_items(parser, children, rule->bodySize-3, rule->bodySize-2);
+    unsigned long line = peak_ast_symbol(parser)->start_line;
     ast_skip_items(parser,1);
-    return init_AST_node(rule->head, children,rule->bodySize-2, NULL);
+    return init_AST_node(rule->head, children, rule->bodySize - 2, NULL, line);
 }
 
 ASTNode* remove_first2_and_second_last(Parser parser)
@@ -226,8 +234,10 @@ ASTNode* remove_first2_and_second_last(Parser parser)
 
     ast_keep_items(parser, children, rule->bodySize-5, rule->bodySize - 4);
 
-    ast_skip_items(parser, 2);
-    return init_AST_node(rule->head, children,rule->bodySize-3, NULL);
+    ast_skip_items(parser, 1);
+    unsigned long line = peak_ast_symbol(parser)->start_line;
+    ast_skip_items(parser, 1);
+    return init_AST_node(rule->head, children, rule->bodySize - 3, NULL, line);
 
 
 }
@@ -245,9 +255,22 @@ ASTNode* ast_for(Parser parser)
     ast_keep_items(parser, children, rule->bodySize - 6, 1);
     ast_skip_items(parser, 1);
     ast_keep_items(parser, children, rule->bodySize - 7, 2);
-    ast_skip_items(parser, 2);
-    return init_AST_node(rule->head, children,rule->bodySize-4, NULL);
+    ast_skip_items(parser, 1);
+    unsigned long line = peak_ast_symbol(parser)->start_line;
+    ast_skip_items(parser, 1);
+    return init_AST_node(rule->head, children, rule->bodySize - 4, NULL, line);
 
+}
+
+ASTNode* ast_char(Parser parser)
+{
+    free(pop(parser->stack));
+    ASTNode* temp = pop(parser->stack);
+    char num = temp->token->lexeme[1];
+    sprintf(temp->token->lexeme, "%d", num);
+    temp->type = TOKEN_INT_LITERAL;
+    temp->token->type = TOKEN_INT_LITERAL;
+    return temp;
 }
 
 void ast_skip_items(Parser parser, int num)
@@ -271,6 +294,11 @@ void ast_keep_items(Parser parser, ASTNode** children, int curr_index, int num)
 
 }
 
+ASTNode* peak_ast_symbol(Parser parser)
+{
+    return parser->stack->content->next->data;
+}
+
 ASTNode* remove_last_and_third_to_last(Parser parser)
 {
 
@@ -283,7 +311,7 @@ ASTNode* remove_last_and_third_to_last(Parser parser)
     ast_keep_items(parser, children, rule->bodySize-3, 1);
     ast_skip_items(parser, 1);
     ast_keep_items(parser, children, rule->bodySize-4, rule->bodySize-3);
-    return init_AST_node(rule->head, children,rule->bodySize-2, NULL);
+    return init_AST_node(rule->head, children, rule->bodySize - 2, NULL, children[0]->start_line);
 }
 
 ASTNode* remove_second_last_chain(Parser parser)
@@ -323,7 +351,7 @@ ASTNode* remove_second_last(Parser parser)
     ast_skip_items(parser, 1);
     ast_keep_items(parser, children, rule->bodySize-3, rule->bodySize-2);
 
-    return init_AST_node(rule->head, children,rule->bodySize-1, NULL);
+    return init_AST_node(rule->head, children, rule->bodySize - 1, NULL, children[0]->start_line);
 }
 
 ASTNode* remove_l_3_l_4_l_6_l(Parser parser)
@@ -341,7 +369,7 @@ ASTNode* remove_l_3_l_4_l_6_l(Parser parser)
     ast_skip_items(parser, 1);
     ast_keep_items(parser, children, rule->bodySize-7,rule->bodySize-6);
 
-    return init_AST_node(rule->head, children,rule->bodySize-4, NULL);
+    return init_AST_node(rule->head, children, rule->bodySize - 4, NULL, children[0]->start_line);
 }
 
 ASTNode* remove_l_two_and_fourth_l(Parser parser)
@@ -356,7 +384,7 @@ ASTNode* remove_l_two_and_fourth_l(Parser parser)
     ast_keep_items(parser, children, rule->bodySize-4, 1);
     ast_skip_items(parser, 1);
     ast_keep_items(parser, children, rule->bodySize-5, rule->bodySize-4);
-    return init_AST_node(rule->head, children,rule->bodySize-3, NULL);
+    return init_AST_node(rule->head, children, rule->bodySize - 3, NULL, children[0]->start_line);
 }
 
 ASTNode* ast_remove_third(Parser parser)
@@ -369,7 +397,7 @@ ASTNode* ast_remove_third(Parser parser)
     ast_skip_items(parser, 1);
     ast_keep_items(parser, children, 1, 2);
 
-    return init_AST_node(rule->head, children,rule->bodySize-1, NULL);
+    return init_AST_node(rule->head, children, rule->bodySize - 1, NULL, children[0]->start_line);
 
 }
 
@@ -391,6 +419,7 @@ void init_AST_funcs()
     reductionFuncs[FUNC_REM_L_AND_THIRD_L] = remove_last_and_third_to_last;
     reductionFuncs[FUNC_REM_L_THIRD_L_FOURTH_L_SIXTH_L] = remove_l_3_l_4_l_6_l;
     reductionFuncs[FUNC_FOR] = ast_for;
+    reductionFuncs[FUNC_CHAR] = ast_char;
     reductionFuncs[FUNC_REM_SECOND_L] = remove_second_last;
     reductionFuncs[FUNC_REM_SECOND_L_CHAIN] = remove_second_last_chain;
     reductionFuncs[FUNC_REM_LAST_TWO_AND_FOURTH_L] = remove_l_two_and_fourth_l;
@@ -460,6 +489,7 @@ char parse(Parser parser)
                     if(*parser->tokens == NULL) // make sure the end of the input isn't reached
                     {
                         run=0;
+                        discard = 0;
                     }
                     else
                     {
@@ -476,7 +506,7 @@ char parse(Parser parser)
                 }
                 break;
             case ACTION_SHIFT: // if the action is shift, push the input token onto the stack as a node of the AST
-                push(parser->stack, init_AST_node((*parser->tokens)->type, NULL, 0, *parser->tokens));
+                push(parser->stack, init_AST_node((*parser->tokens)->type, NULL, 0, *parser->tokens, 0));
                 parser->tokens++; // advance to the next input token
                 push_int(parser->stack, num); // push the action value (state) onto the top of the stack
                 break;

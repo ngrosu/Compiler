@@ -87,6 +87,8 @@ const char* get_symbol_name(int symbol)
             return "Array Access";
         case SYMBOL_INPUT:
             return "Input";
+        case SYMBOL_BREAK:
+            return "Break Statement";
     }
 
 }

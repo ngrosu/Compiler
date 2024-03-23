@@ -19,7 +19,7 @@ DFA create_DFA()
 void init_DFA(DFA dfa)
 {
     int i;
-    const char* stddelimiter = " /:;,\n(){}[]=-+<>*!~";
+    const char* stddelimiter = " /:;,\n(){}[]=-+<>*!^~&|";
 
     // state 0 is error
     // state 1 is the starting state
@@ -35,8 +35,8 @@ void init_DFA(DFA dfa)
     // int literal
     for(i='0'; i<='9'; i++)
     {
-        set_transition(dfa, (char)i, START_STATE, 4);
-        set_transition(dfa, (char)i, 4, 4);
+        set_transition(dfa, (char)i, START_STATE, NUMBER_STATE);
+        set_transition(dfa, (char)i, NUMBER_STATE, NUMBER_STATE);
     }
     set_state(dfa, 4, TOKEN_INT_LITERAL);
     add_delimiters(dfa, 4, stddelimiter);
@@ -85,8 +85,11 @@ void init_DFA(DFA dfa)
     add_symbol_token_to_DFA(dfa, "]", TOKEN_R_BRACKET, START_STATE);
     add_symbol_token_to_DFA(dfa, "&", TOKEN_BITWISE_AND, START_STATE);
     add_symbol_token_to_DFA(dfa, "&", TOKEN_AND, dfa->num_of_states-1);
+    add_symbol_token_to_DFA(dfa, "|", TOKEN_BITWISE_OR, START_STATE);
+    add_symbol_token_to_DFA(dfa, "|", TOKEN_OR, dfa->num_of_states-1);
     add_symbol_token_to_DFA(dfa, "!", TOKEN_NOT, START_STATE);
     add_symbol_token_to_DFA(dfa, "~", TOKEN_BITWISE_NOT, START_STATE);
+    add_symbol_token_to_DFA(dfa, "^", TOKEN_BITWISE_XOR, START_STATE);
 
 
 

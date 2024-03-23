@@ -126,7 +126,7 @@ char add_item(hash_table *table, void *key, void *item)
     else
     {
         hash_table_item* new_item = init_hash_table_item(key, item);
-        bucket->next = create_linked_list_node(new_item, NULL);
+        table->array[index] = create_linked_list_node(new_item, table->array[index]);
         table->num_of_items++;
         if(table->num_of_items > table->array_size << 2) // if num of elements is 4 times as much as the capacity
         {

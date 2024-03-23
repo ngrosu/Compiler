@@ -10,12 +10,13 @@
 typedef struct ScopeNode{
     struct ScopeNode** children;
     struct ScopeNode* parent;
+    TokenType return_type;
     int num_of_children;
     struct hash_table* table;
     ScopeType scope;
 } ScopeNode;
 
-ScopeNode* init_scope_node(ScopeType scope);
+ScopeNode *init_scope_node(ScopeType scope, TokenType return_type);
 
 void add_scope_child(ScopeNode* parent, ScopeNode *child);
 
@@ -31,6 +32,7 @@ typedef struct SymbolItem
     int type[2];
     unsigned int offset;
     unsigned int size;
+    char assigned;
     struct param* parameters;
     int num_of_params;
     unsigned int line_of_dec;
@@ -38,11 +40,15 @@ typedef struct SymbolItem
 
 symbol_item *
 init_symbol_item(char *name, int data_type, int symbol_type, Param *parameters, int num_of_params, int length,
-                 unsigned int line);
+                 unsigned int line, char assigned);
 
 Param* init_params(ASTNode* params);
 
-char construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope, ScopeNode *global);
+char construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope);
+
+symbol_item* find_var(ScopeNode* curr_scope, char* name);
+
+ScopeNode * is_in_scope(ScopeNode* curr_scope, ScopeType search);
 
 void print_scope_tree(ScopeNode *node, int depth, char *finals);
 

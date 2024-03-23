@@ -27,6 +27,9 @@ void report_error(ErrorCode code, unsigned int line, const char *message, const 
         case ERR_INTERNAL:
             errorString = "Internal Error";
             break;
+        case ERR_WARNING:
+            errorString = "WARNING";
+            break;
         default:
             break;  // No action needed for no error or default case
     }

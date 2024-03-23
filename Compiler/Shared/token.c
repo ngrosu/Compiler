@@ -121,6 +121,8 @@ char* get_token_name(TokenType type)
             return "OUTPUT";
         case TOKEN_INPUT:
             return "INPUT";
+        case TOKEN_BREAK:
+            return "BREAK";
     }
     return "INVALID";
 }
