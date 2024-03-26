@@ -5,7 +5,7 @@
 #include "SymbolTableManager.h"
 
 
-ScopeNode *init_scope_node(ScopeType scope, TokenType return_type)
+ScopeNode *init_scope_node(ScopeType scope, TokenType return_type, unsigned long start_line)
 {
     ScopeNode* result = malloc(sizeof(ScopeNode));
     if (result == NULL)
@@ -19,6 +19,8 @@ ScopeNode *init_scope_node(ScopeType scope, TokenType return_type)
     result->table = init_hash_table((unsigned long (*)(void *)) djb2, (int (*)(void *, void *)) strcmp);
     result->return_type = return_type;
     result->scope = scope;
+    result->returning = 0;
+    result->start_line = start_line;
     return result;
 }
 
@@ -66,7 +68,7 @@ Param* init_params(ASTNode* params)
     return result;
 }
 
-char construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
+int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
 {
     if (ast == NULL)
     {return 1;}
@@ -78,7 +80,7 @@ char construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
     ScopeNode* new_node;
     char item_added_success = 0;
     char assigned;
-    char error = 0;
+    int error = 0;
     switch (ast->type)
     {
         case SYMBOL_FUNC_DEC + TOKEN_COUNT:
@@ -96,7 +98,7 @@ char construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
                 error = 1;
                 report_error(ERR_SEMANTIC, line, "Symbol Already Declared | ", item->name);
             }
-            new_node = init_scope_node(SCOPE_FUNCTION, ast->children[0]->type);
+            new_node = init_scope_node(SCOPE_FUNCTION, ast->children[0]->type, ast->start_line);
             for(int i = 0; i<num_of_items; i++)
             {
                 item = init_symbol_item(params[i].name, params[i].type, SYMBOL_VAR_DEC + TOKEN_COUNT,
@@ -109,13 +111,13 @@ char construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
             }
             add_scope_child(scope, new_node);
             if(num_of_items==0)
-                construct_symbol_table_rec(ast->children[2], new_node);
+                error |= !construct_symbol_table_rec(ast->children[2], new_node);
             else
-                construct_symbol_table_rec(ast->children[3], new_node);
+                error |= !construct_symbol_table_rec(ast->children[3], new_node);
             break;
         case SYMBOL_ARR_DEC + TOKEN_COUNT:
             line = ast->children[0]->token->line;
-            assigned = (char)(ast->num_of_children != 3);
+            assigned = 1;
             item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type,
                                     SYMBOL_ARR_DEC + TOKEN_COUNT, NULL, 0, (int) strtol(ast->children[2]->token->lexeme,
                                                                                         &temp_str, 10), line, assigned);
@@ -137,37 +139,37 @@ char construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
             }
             break;
         case SYMBOL_WHILE + TOKEN_COUNT:
-            new_node = init_scope_node(SCOPE_LOOP, TOKEN_ERROR);
+            new_node = init_scope_node(SCOPE_LOOP, TOKEN_ERROR, ast->start_line);
             add_scope_child(scope, new_node);
-            construct_symbol_table_rec(ast->children[1], new_node);
+            error |= !construct_symbol_table_rec(ast->children[1], new_node);
             break;
         case SYMBOL_FOR + TOKEN_COUNT:
-            new_node = init_scope_node(SCOPE_LOOP, TOKEN_ERROR);
+            new_node = init_scope_node(SCOPE_LOOP, TOKEN_ERROR, ast->start_line);
             add_scope_child(scope, new_node);
-            construct_symbol_table_rec(ast->children[0], new_node);
-            construct_symbol_table_rec(ast->children[3], new_node);
+            error |= !construct_symbol_table_rec(ast->children[0], new_node);
+            error |= !construct_symbol_table_rec(ast->children[3], new_node);
             break;
         case SYMBOL_STATEMENTS + TOKEN_COUNT:
             for(int i = 0; i<ast->num_of_children; i++)
             {
-                construct_symbol_table_rec(ast->children[i], scope);
+                error |= !construct_symbol_table_rec(ast->children[i], scope);
             }
             break;
         case SYMBOL_IF + TOKEN_COUNT:
-            new_node = init_scope_node(SCOPE_GENERIC, TOKEN_ERROR);
+            new_node = init_scope_node(SCOPE_CONDITIONAL, TOKEN_ERROR, ast->start_line);
             add_scope_child(scope, new_node);
-            construct_symbol_table_rec(ast->children[1], new_node);
+            error |= !construct_symbol_table_rec(ast->children[1], new_node);
             break;
         case SYMBOL_IF_ELSE + TOKEN_COUNT:
-            new_node = init_scope_node(SCOPE_GENERIC, TOKEN_ERROR);
+            new_node = init_scope_node(SCOPE_CONDITIONAL, TOKEN_ERROR, ast->start_line);
             add_scope_child(scope, new_node);
-            construct_symbol_table_rec(ast->children[1], new_node);
-            new_node = init_scope_node(SCOPE_GENERIC, TOKEN_ERROR);
+            error |= !construct_symbol_table_rec(ast->children[1], new_node);
+            new_node = init_scope_node(SCOPE_CONDITIONAL, TOKEN_ERROR, ast->start_line);
             add_scope_child(scope, new_node);
-            construct_symbol_table_rec(ast->children[2], new_node);
+            error |= !construct_symbol_table_rec(ast->children[2], new_node);
             break;
     }
-    return (char)!error;
+    return !error;
 }
 
 symbol_item* find_var(ScopeNode* curr_scope, char* name)
@@ -246,7 +248,7 @@ void print_scope_tree(ScopeNode *node, int depth, char *finals)
                 }
                 hash_table_item* item = bucket->data;
                 symbol_item* sItem = item->data;
-                printf("%*s:%s -> %s %s l: %d %s\n", 6, "", (char*)item->key, get_symbol_name(sItem->type[0]), get_symbol_name(sItem->type[1]), sItem->size,  sItem->assigned ? "Assigned" : "");
+                printf("%*s:%s -> %s %s len: %d %s\n", 6, "", (char*)item->key, get_symbol_name(sItem->type[0]), get_symbol_name(sItem->type[1]), sItem->size,  sItem->assigned ? "Assigned" : "");
                 bucket = bucket->next;
             }
         }

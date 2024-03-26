@@ -34,7 +34,7 @@ void report_error(ErrorCode code, unsigned int line, const char *message, const 
             break;  // No action needed for no error or default case
     }
 
-    fprintf(stderr, "[%s] at line %d: %s", errorString, line, message);
+    fprintf(stderr, "[%s] in line %d: %s", errorString, line, message);
     if(extra!=NULL)
         fprintf(stderr, "%s", extra);
     fprintf(stderr, "\n");

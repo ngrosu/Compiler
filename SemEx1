@@ -1,0 +1,11 @@
+int main
+{
+char a = 3;
+char a = helper(a);
+return 1;
+}
+
+int helper: char a
+{
+    a = a + '0';
+}

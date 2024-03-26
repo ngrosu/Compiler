@@ -41,7 +41,8 @@ void init_DFA(DFA dfa)
     set_state(dfa, 4, TOKEN_INT_LITERAL);
     add_delimiters(dfa, 4, stddelimiter);
 
-    add_token_to_DFA(dfa, "//", TOKEN_COMMENT, START_STATE, "\n");
+    add_symbol_token_to_DFA(dfa, "/", TOKEN_F_SLASH, START_STATE);
+    add_token_to_DFA(dfa, "/", TOKEN_COMMENT, dfa->num_of_states-1, "\n");
     for(i=0; i<NUM_OF_CHARS; i++)
     {
         if(i!='\n') {set_transition(dfa, (char)i, dfa->num_of_states-1, dfa->num_of_states-1);}
@@ -76,7 +77,7 @@ void init_DFA(DFA dfa)
     add_symbol_token_to_DFA(dfa, "+", TOKEN_PLUS_OP, START_STATE);
     add_symbol_token_to_DFA(dfa, "-", TOKEN_MINUS_OP, START_STATE);
     add_symbol_token_to_DFA(dfa, "*", TOKEN_ASTERISK, START_STATE);
-    add_symbol_token_to_DFA(dfa, "/", TOKEN_F_SLASH, START_STATE);
+    // f_slash is next to comment
     add_symbol_token_to_DFA(dfa, ">", TOKEN_GREATER_THAN_OP, START_STATE);
     add_symbol_token_to_DFA(dfa, "=", TOKEN_GREATER_THAN_EQUAL_OP, dfa->num_of_states-1);
     add_symbol_token_to_DFA(dfa, "<", TOKEN_LESS_THAN_OP, START_STATE);

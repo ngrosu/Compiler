@@ -11,12 +11,14 @@ typedef struct ScopeNode{
     struct ScopeNode** children;
     struct ScopeNode* parent;
     TokenType return_type;
+    int returning;
     int num_of_children;
+    unsigned long start_line;
     struct hash_table* table;
     ScopeType scope;
 } ScopeNode;
 
-ScopeNode *init_scope_node(ScopeType scope, TokenType return_type);
+ScopeNode *init_scope_node(ScopeType scope, TokenType return_type, unsigned long start_line);
 
 void add_scope_child(ScopeNode* parent, ScopeNode *child);
 
@@ -44,7 +46,7 @@ init_symbol_item(char *name, int data_type, int symbol_type, Param *parameters, 
 
 Param* init_params(ASTNode* params);
 
-char construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope);
+int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope);
 
 symbol_item* find_var(ScopeNode* curr_scope, char* name);
 

@@ -74,19 +74,6 @@ void add_token(Lexer lexer, Token token)
     lexer->num_of_tokens++;
 }
 
-void panic_mode(Lexer lexer, char chr, int lexeme_length)
-{
-
-    while(!(chr == ' ' || chr == '\n' || chr == '\t' || chr == '\r' || chr == '\v' || chr == '\f'))
-    {
-        chr = fgetc(lexer->file);
-        lexer->token_buffer[lexeme_length] = (char)chr;
-        lexeme_length++;
-    }
-    ungetc(chr, lexer->file);
-    lexer->token_buffer[--lexeme_length] = '\0';
-    report_error(ERR_LEXICAL, lexer->curr_line, lexer->token_buffer, NULL);
-}
 
 Token get_next_token(Lexer lexer)
 {
@@ -136,8 +123,11 @@ Token get_next_token(Lexer lexer)
             return init_token(TOKEN_ERROR, lexer->token_buffer, lexer->curr_line);
         }
         state = temp_state;
-        lexer->token_buffer[lexeme_length] = (char)chr;
-        lexeme_length++;
+        if(lexer->dfa->states[state] != TOKEN_COMMENT)
+        {
+            lexer->token_buffer[lexeme_length] = (char)chr;
+            lexeme_length++;
+        }
         chr = fgetc(lexer->file);
     }
     if(state==START_STATE)

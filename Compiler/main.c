@@ -77,8 +77,8 @@ int main1()
 
 int main()
 {
-
-    Lexer lexer = init_lexer("../../test.chad");
+    int e;
+    Lexer lexer = init_lexer("../../SemEx3");
 //    print_transition_matrix(lexer->dfa);
     if(!tokenize(lexer))
     {exit(0);}
@@ -108,16 +108,21 @@ int main()
 
 //    in_order((init_grammar()));
 //    printf("  %d  ", parser->num_of_states);
-    parse(parser);
+
+    e = parse(parser);
+    if(e)
+    {
     pop(parser->stack);
     printf("\nprinting:\n");
     char arr[50] = {0};
-    ScopeNode* t = init_scope_node(SCOPE_GLOBAL, TOKEN_ERROR);
-    construct_symbol_table_rec((ASTNode *) (parser->stack->content->data), t);
+    ScopeNode* t = init_scope_node(SCOPE_GLOBAL, TOKEN_ERROR, 0);
+    e &= construct_symbol_table_rec((ASTNode *) (parser->stack->content->data), t);
     print_scope_tree(t, 0, arr);
     printAST((ASTNode *) (parser->stack->content->data), 0, arr);
-    analyze_statements(parser->stack->content->data, t);
-
-
-
+    e &= analyze_statements(parser->stack->content->data, t, 0);
+    if(!e)
+    {
+        printf("\nFOUND ERRORS\n");
+    } else printf("\nOK PASS\n");
+        }
 }

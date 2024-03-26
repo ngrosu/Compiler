@@ -145,7 +145,12 @@ ASTNode* ast_default(Parser parser)
         children[i] = (ASTNode *) pop(parser->stack);  // afterward, pop and add to children
         // this is done since the stack is pushed onto in pairs, with the state on top and the node under
     }
-    return init_AST_node(rule->head, children, rule->bodySize, NULL, children[0]->start_line);
+    unsigned long line;
+    if (children[0] == NULL)
+        line = -1;
+    else
+        line = children[0]->start_line;
+    return init_AST_node(rule->head, children, rule->bodySize, NULL, line);
 }
 ASTNode* ast_chain(Parser parser)
 {
@@ -450,6 +455,22 @@ char parse(Parser parser)
     {
         unsigned int stack_peek = *(unsigned int*)(parser->stack->content->data); // get the top value of the stack
         // which is the current state
+        while(parser->tokens[0]->type == TOKEN_COMMENT)
+        {
+            parser->tokens++;
+        }
+        if(parser->tokens[0]->type == TOKEN_STRING_LITERAL)
+        {
+            char* l = parser->tokens[0]->lexeme;
+            while(l[1]!='"')
+            {
+                l[0] = l[1];
+                l++;
+            }
+            *l=0;
+            if(l == parser->tokens[0]->lexeme)
+                *l = 0;
+        }
         action = parser->action_table[stack_peek][(*parser->tokens)->type*2]; // check the action
         num = parser->action_table[stack_peek][((*parser->tokens)->type*2)+1];  // check the action value
         switch (action)
@@ -464,17 +485,10 @@ char parse(Parser parser)
                 {
                     s = pop(parser->stack); // get the current state
                     delete_AST(pop(parser->stack)); // discard the symbol on the stack
-                    // check if for the current state (s), there exists a goto to statement expression or scope
                     if(parser->goto_table[*s][SYMBOL_STATEMENT])
                     {
                         discard=0;
                         parse_error_recovery(parser, s, SYMBOL_STATEMENT);
-                    }
-                    else if (parser->goto_table[*s][SYMBOL_EXPRESSION])
-                    {
-                        discard=0;
-                        parse_error_recovery(parser, s, SYMBOL_EXPRESSION);
-
                     }
                     else if (parser->goto_table[*s][SYMBOL_SCOPE])
                     {
@@ -526,6 +540,6 @@ char parse(Parser parser)
                 break;
         }
     }
-    return error;
+    return !error;
 }
 
