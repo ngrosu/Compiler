@@ -164,6 +164,16 @@ typedef enum {
 // PARSER
 #define MAX_RULE_SIZE 10
 
+// CODE GENERATOR
+
+#define REGISTER_NAME_MAX_SIZE 8
+#define NUM_OF_REGISTERS 4
+// REGISTERS
+#define R8 "r8"
+#define R9 "r9"
+#define R10 "r10"
+#define R11 "r11"
+
 
 // ERROR
 typedef enum {
