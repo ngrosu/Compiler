@@ -1,10 +1,12 @@
 int main
 {
+    int a[5];
     if(1)
-    {  // this is a comment
-        int a;  // here a is only defined inside of the if's scope
+    {
+        int a;
         a = 3;
     }
-    int x = a + 2; // and so the a is undeclared over here outside of the scope
+    char x;
+    x = a[1];
     return x;
 }

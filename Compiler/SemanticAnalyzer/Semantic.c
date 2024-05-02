@@ -118,10 +118,15 @@ int analyze_assignment(ASTNode* ast, ScopeNode* scope)
 {
     int result = 1;
     symbol_item* item = check_var_declared(ast->children[0], scope);
-    if (ast->children[0]->type == TOKEN_IDENTIFIER)
+    if (ast->children[0]->type == TOKEN_IDENTIFIER) // check if assigning to an identifier
     {
         if (item != NULL)
         {
+            if(item->type[1] != SYMBOL_VAR_DEC + TOKEN_COUNT)
+            {
+                result = 0;
+                report_error(ERR_SEMANTIC, ast->start_line, "Use of non-variable identifier as variable | ", ast->children[0]->token->lexeme);
+            }
             int run = 1;
             if(item->assigned == 0)
             {
@@ -139,7 +144,10 @@ int analyze_assignment(ASTNode* ast, ScopeNode* scope)
                         } else
                             scope = scope->parent;
                     } else
+                    {
                         run = 0;
+                        item->assigned = 1;
+                    }
                 }
             }
             else
@@ -148,8 +156,9 @@ int analyze_assignment(ASTNode* ast, ScopeNode* scope)
         else
             result = 0;
     }
-    else
+    else // if not identifier, it's an array
         result &= analyze_arr_acc(ast->children[0], scope);
+    result &= analyze_expression(ast->children[1], scope);
     int type = get_expression_type(ast->children[1], scope);
     if (type == TOKEN_ERROR)
         result = 0;
@@ -253,8 +262,10 @@ int get_expression_type(ASTNode *ast, ScopeNode *scope)
             result = check_num_type(ast);
             break;
         case TOKEN_IDENTIFIER:
-            if(analyze_var_acc(ast, scope))
+            if(check_var_declared(ast, scope))
+            {
                 result = find_var(scope, ast->token->lexeme)->type[0];
+            }
             else
                 result = TOKEN_ERROR;
             break;
@@ -294,7 +305,7 @@ int analyze_expression(ASTNode *ast, ScopeNode *scope)
             result = analyze_expression(ast->children[0], scope);
             break;
         case TOKEN_INT_LITERAL:
-            result = check_num_type(ast);
+            result = check_num_type(ast) != TOKEN_ERROR;
             break;
         case TOKEN_IDENTIFIER:
             result = analyze_var_acc(ast, scope);
