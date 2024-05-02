@@ -7,6 +7,7 @@
 #include "../Parser/Parser.h"
 #include "hashtable.h"
 
+
 typedef struct ScopeNode{
     struct ScopeNode** children;
     struct ScopeNode* parent;
@@ -14,7 +15,9 @@ typedef struct ScopeNode{
     int returning;
     int num_of_children;
     unsigned long start_line;
+    int bytes_since_last_frame;
     struct hash_table* table;
+    int curr_index;
     ScopeType scope;
 } ScopeNode;
 
@@ -31,8 +34,9 @@ typedef struct param
 typedef struct SymbolItem
 {
     char* name;
-    int type[2];
+    int type[2]; //
     unsigned int offset;
+    ScopeNode* scope;
     unsigned int size;
     char assigned;
     struct param* parameters;

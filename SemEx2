@@ -1,12 +1,6 @@
-int main
+
+int main: int x
 {
-    int a[5];
-    if(1)
-    {
-        int a;
-        a = 3;
-    }
-    char x;
-    x = a[1];
-    return x;
+    int b=3+x;
+    return 1;
 }

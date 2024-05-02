@@ -119,7 +119,7 @@ void init_DFA(DFA dfa)
     add_alnum_token_to_DFA(dfa, "else", TOKEN_ELSE, START_STATE, stddelimiter);
 
     // starting l
-    add_alnum_token_to_DFA(dfa, "long", TOKEN_LONG, START_STATE, stddelimiter);
+    add_alnum_token_to_DFA(dfa, "short", TOKEN_SHORT, START_STATE, stddelimiter);
 
     // starting with w
     add_alnum_token_to_DFA(dfa, "while", TOKEN_WHILE, START_STATE, stddelimiter);

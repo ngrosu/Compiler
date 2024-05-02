@@ -103,8 +103,8 @@ char* get_token_name(TokenType type)
             return "NOT EQUAL";
         case TOKEN_CHAR:
             return "CHAR";
-        case TOKEN_LONG:
-            return "LONG";
+        case TOKEN_SHORT:
+            return "SHORT";
         case TOKEN_UINT:
             return "UINT";
         case TOKEN_ULONG:

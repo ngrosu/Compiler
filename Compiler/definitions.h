@@ -67,7 +67,7 @@ typedef enum
     TOKEN_INPUT,
     TOKEN_INT,
     TOKEN_CHAR,
-    TOKEN_LONG,
+    TOKEN_SHORT,
     TOKEN_UINT,
     TOKEN_ULONG,
     TOKEN_VOID,
@@ -164,15 +164,31 @@ typedef enum {
 // PARSER
 #define MAX_RULE_SIZE 10
 
+
 // CODE GENERATOR
 
 #define REGISTER_NAME_MAX_SIZE 8
 #define NUM_OF_REGISTERS 4
+#define LABEL_NAME_MAX_SIZE 10
+#define LABEL_FORMAT ".L%d"
+#define STACK_ENTRY_SIZE 8
+#define STACK_OFFSET_FORMAT "[rbp-%d]"
+#define GLOBAL_ADDRESS_FORMAT "[%s]"
 // REGISTERS
+#define bp "rbp"
+#define sp "rsp"
 #define R8 "r8"
 #define R9 "r9"
 #define R10 "r10"
 #define R11 "r11"
+// INSTRUCTIONS
+#define mov "\tmov %s, %s\n"
+#define movx "\tmov%c %s, %s\n"
+#define add "\tadd %s, %s\n"
+#define sub "\tsub %s, %s\n"
+//
+//
+//
 
 
 // ERROR

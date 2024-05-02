@@ -14,13 +14,14 @@ int check_num_type(ASTNode *ast)
     {
         result = TOKEN_CHAR;
     }
+    else if(value <= 32767)
+    {
+        result = TOKEN_SHORT;
+    }
+
     else if(value <= 2147483647)
     {
         result = TOKEN_INT;
-    }
-    else if(value <= (unsigned long long)9223372036854775807)
-    {
-        result = TOKEN_LONG;
     }
     else
     {
@@ -101,6 +102,12 @@ int analyze_var_dec(ASTNode* ast, ScopeNode* scope)
     int result = 1;
     if(ast->num_of_children == 3)
     {
+        if(scope->scope == SCOPE_GLOBAL && ast->children[2]->type != TOKEN_INT_LITERAL)
+        {
+            result = 0;
+            report_error(ERR_SEMANTIC, ast->children[1]->start_line, "Invalid assignment in global scope"
+                                                                     " to variable ", ast->children[1]->token->lexeme);
+        }
         int temp_type = get_expression_type(ast->children[2], scope);
         if(ast->children[0]->type != resolve_types(temp_type, ast->children[0]->type))
         {
@@ -158,6 +165,7 @@ int analyze_assignment(ASTNode* ast, ScopeNode* scope)
     }
     else // if not identifier, it's an array
         result &= analyze_arr_acc(ast->children[0], scope);
+
     result &= analyze_expression(ast->children[1], scope);
     int type = get_expression_type(ast->children[1], scope);
     if (type == TOKEN_ERROR)
@@ -179,6 +187,12 @@ int analyze_arr_dec(ASTNode* ast, ScopeNode* scope)
     result &= (check_num_type(ast->children[2]) != 0);
     if(ast->num_of_children == 4)
     {
+        if(scope->scope == SCOPE_GLOBAL && ast->children[3]->type != TOKEN_STRING_LITERAL)
+        {
+            result = 0;
+            report_error(ERR_SEMANTIC, ast->children[1]->start_line, "Invalid assignment in global scope"
+                                                                     " to variable ", ast->children[1]->token->lexeme);
+        }
         if(strlen(ast->children[3]->token->lexeme)  > strtol(ast->children[2]->token->lexeme, NULL, 10))
         {
             result = 0;
@@ -231,10 +245,10 @@ int resolve_types(int type1, int type2)
 {
     if(type1 == TOKEN_ERROR || type2 == TOKEN_ERROR)
         return TOKEN_ERROR;
-    if(type1 == TOKEN_LONG || type2 == TOKEN_LONG)
-        return TOKEN_LONG;
     if(type1 == TOKEN_INT || type2 == TOKEN_INT)
         return TOKEN_INT;
+    if(type1 == TOKEN_SHORT || type2 == TOKEN_SHORT)
+        return TOKEN_SHORT;
     if(type1 == TOKEN_CHAR || type2 == TOKEN_CHAR)
         return TOKEN_CHAR;
     printf("resolve_types unexpected code path :O");
@@ -388,6 +402,11 @@ int analyze_while(ASTNode *ast, ScopeNode *scope)
 }
 int analyze_func(ASTNode *ast, ScopeNode *scope)
 {
+    if(scope->parent->scope != SCOPE_GLOBAL)
+    {
+        report_error(ERR_SEMANTIC, ast->start_line, "Function declared outside of global scope", NULL);
+        return 0;
+    }
     if (ast->num_of_children == 4)
     {
         return analyze_statements(ast->children[3], scope, 0);

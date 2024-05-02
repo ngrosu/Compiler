@@ -7,6 +7,7 @@
 #include "Parser/Parser.h"
 #include "Parser/ParserGenerator/Functions.h"
 #include "SemanticAnalyzer/Semantic.h"
+#include "CodeGenerator/code_gen.h"
 
 int main1()
 {
@@ -123,6 +124,8 @@ int main()
     if(!e)
     {
         printf("\nFOUND ERRORS\n");
-    } else printf("\nOK PASS\n");
-        }
+    } else
+        printf("\nOK PASS\n");
+    generate_code(init_code_gen(), t, (ASTNode *) (parser->stack->content->data));
+    }
 }

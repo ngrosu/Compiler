@@ -540,7 +540,7 @@ AVLNode* init_grammar()
 
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_INT, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_UINT, 0));
-    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_LONG, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_SHORT, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_ULONG, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_CHAR, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_VOID, 0));

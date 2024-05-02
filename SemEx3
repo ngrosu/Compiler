@@ -6,6 +6,6 @@ int main
         int a; // however the inner variable a, shadows the variable a from the outer scope
         a = 3; // so in assigning a=3, only the inner scope a is assigned
     }
-    int x = a + 2; // and so here a is unassigned :)
+    int x = a + 2;
     return x;
 }

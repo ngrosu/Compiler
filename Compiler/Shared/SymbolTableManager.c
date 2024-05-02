@@ -20,6 +20,8 @@ ScopeNode *init_scope_node(ScopeType scope, TokenType return_type, unsigned long
     result->return_type = return_type;
     result->scope = scope;
     result->returning = 0;
+    result->curr_index = 0;
+    result->bytes_since_last_frame = 0;
     result->start_line = start_line;
     return result;
 }
@@ -70,6 +72,7 @@ Param* init_params(ASTNode* params)
 
 int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
 {
+    static int offset = 0;
     if (ast == NULL)
     {return 1;}
     char* temp_str;
@@ -94,6 +97,7 @@ int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
             item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type,
                                     SYMBOL_FUNC_DEC + TOKEN_COUNT, params, num_of_items, 1, line, 1);
             item_added_success = add_item(scope->table, ast->children[1]->token->lexeme, item);
+            item->scope = scope;
             if (!item_added_success) {
                 error = 1;
                 report_error(ERR_SEMANTIC, line, "Symbol Already Declared | ", item->name);
@@ -104,6 +108,7 @@ int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
                 item = init_symbol_item(params[i].name, params[i].type, SYMBOL_VAR_DEC + TOKEN_COUNT,
                                         NULL, 0, 1, line, 1);
                 item_added_success = add_item(new_node->table,params[i].name, item);
+                item->scope = new_node;
                 if (!item_added_success) {
                     error = 1;
                     report_error(ERR_SEMANTIC, line, "Symbol Already Declared | ", item->name);
@@ -122,6 +127,7 @@ int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
                                     SYMBOL_ARR_DEC + TOKEN_COUNT, NULL, 0, (int) strtol(ast->children[2]->token->lexeme,
                                                                                         &temp_str, 10), line, assigned);
             item_added_success = add_item(scope->table, ast->children[1]->token->lexeme, item);
+            item->scope = scope;
             if (!item_added_success) {
                 error = 1;
                 report_error(ERR_SEMANTIC, line, "Symbol Already Declared | ", item->name);
@@ -133,6 +139,7 @@ int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
             item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type,
                                     SYMBOL_VAR_DEC + TOKEN_COUNT, NULL, 0, 1, line, assigned);
             item_added_success = add_item(scope->table, ast->children[1]->token->lexeme, item);
+            item->scope = scope;
             if (!item_added_success) {
                 error = 1;
                 report_error(ERR_SEMANTIC, line, "Symbol Already Declared | ", item->name);
