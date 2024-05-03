@@ -15,7 +15,8 @@ typedef struct ScopeNode{
     int returning;
     int num_of_children;
     unsigned long start_line;
-    int bytes_since_last_frame;
+    int bytes_used_since_last_frame;
+    int bytes_cleared_since_last_frame;
     struct hash_table* table;
     int curr_index;
     ScopeType scope;

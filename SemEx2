@@ -1,6 +1,16 @@
 
-int main: int x
+int main: int a, int b, int c
 {
-    int b=3+x;
+
+    int h = 5;
+    int x = 3;
+    int xd = 3;
+    int xcg = 3;
+    int xcgd = 3;
+    int xcgc = 3;
+    int xcgcx = 3;
+    x = h * x;
+
+
     return 1;
 }

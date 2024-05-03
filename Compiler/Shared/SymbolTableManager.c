@@ -21,7 +21,8 @@ ScopeNode *init_scope_node(ScopeType scope, TokenType return_type, unsigned long
     result->scope = scope;
     result->returning = 0;
     result->curr_index = 0;
-    result->bytes_since_last_frame = 0;
+    result->bytes_used_since_last_frame = 0;
+    result->bytes_cleared_since_last_frame = 0;
     result->start_line = start_line;
     return result;
 }

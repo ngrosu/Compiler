@@ -30,7 +30,8 @@ int allocate_register(CodeGen* code_gen)
         if (!code_gen->registers[r].inuse)
         {
             code_gen->registers[r].inuse = 1;
-            printf("allocated %s\n", get_register_name(code_gen, r));
+            const char* temp = get_register_name(code_gen, r);
+            printf("allocated %s\n", temp);
             return r;
         }
     }
@@ -77,8 +78,8 @@ const char *get_symbol_code(symbol_item *item, int index)
         return result;
     }
 
-    int offset = item->scope->parent->bytes_since_last_frame + item->offset
-            - convert_type_to_bytes(item->type[0])*index; // subtract the index to access specific indices
+    int offset = item->scope->parent->bytes_used_since_last_frame + item->offset
+                 - convert_type_to_bytes(item->type[0])*index; // subtract the index to access specific indices
     snprintf(result, TOKEN_MAXSIZE, STACK_OFFSET_FORMAT, offset);
     return result;
 }
@@ -96,7 +97,7 @@ void load_token_to_register(ScopeNode* scope, CodeGen* code_gen, int register_nu
     if (token->type == TOKEN_IDENTIFIER)
     {
         symbol_item* item = find_var(scope, token->lexeme);
-        generator_output(code_gen, mov, get_register_name(code_gen, register_num), get_symbol_code(item, 0));
+        generator_output(code_gen, "\tmovsx %s, %s %s\n", get_register_name(code_gen, register_num), convert_type_to_size_full(item->type[0]), get_symbol_code(item, 0));
     }
     else
     {
@@ -139,6 +140,24 @@ char convert_type_to_size(int num)
     return res;
 }
 
+const char* convert_type_to_size_full(int num)
+{
+    char* res;
+    switch(num)
+    {
+        case TOKEN_INT:
+            res= "dword";
+            break;
+        case TOKEN_SHORT:
+            res= "word";
+            break;
+        case TOKEN_CHAR:
+            res= "byte";
+            break;
+    }
+    return res;
+}
+
 int generate_binary_expressions(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast, int r1, int r2)
 {
     switch(ast->type)
@@ -149,6 +168,14 @@ int generate_binary_expressions(CodeGen* code_gen, ScopeNode* scope, ASTNode* as
             break;
         case TOKEN_MINUS_OP:
             generator_output(code_gen, sub, get_register_name(code_gen, r1), get_register_name(code_gen, r2));
+            free_register(code_gen, r2);
+            break;
+        case TOKEN_ASTERISK:
+            generator_output(code_gen, imul, get_register_name(code_gen, r1), get_register_name(code_gen, r2));
+            free_register(code_gen, r2);
+            break;
+        case TOKEN_F_SLASH:
+            generator_output(code_gen, idiv, get_register_name(code_gen, r1), get_register_name(code_gen, r2));
             free_register(code_gen, r2);
             break;
     }
@@ -171,6 +198,7 @@ int generate_expression(CodeGen *code_gen, ScopeNode* scope, ASTNode* ast)
         r_temp = generate_expression(code_gen, scope, ast->children[1]);
         return generate_binary_expressions(code_gen, scope, ast, r, r_temp);
     }
+
 }
 
 void generate_assignment(CodeGen *code_gen, ScopeNode* scope, symbol_item *item, ASTNode *ast, int index)
@@ -185,9 +213,9 @@ void generate_assignment(CodeGen *code_gen, ScopeNode* scope, symbol_item *item,
     else
     {
         int r = generate_expression(code_gen, scope, ast);
-        generator_output(code_gen, movx,
-                         convert_type_to_size(item->type[0])
-                , get_symbol_code(item, 0), get_register_name(code_gen, r));
+        char size = convert_type_to_size(item->type[0]);
+        generator_output(code_gen, "\tmov%c %s, %s%c", size,
+                         get_symbol_code(item, 0), get_register_name(code_gen, r), size);
         free_register(code_gen, r);
     }
 }
@@ -206,6 +234,17 @@ void generate_arr_dec_ass(CodeGen* code_gen, symbol_item* item, const char* s)
     }
 }
 
+int calc_stack_size_diff(int bytes_used, int bytes_cleared)
+{
+    int diff = 0;
+    if(bytes_used > bytes_cleared)
+    {
+        diff = (bytes_used/STACK_ENTRY_SIZE + 1)*
+                     STACK_ENTRY_SIZE - bytes_cleared;
+    }
+    return diff;
+}
+
 void generate_declaration(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
 {
     if (scope->scope != SCOPE_GLOBAL)
@@ -215,13 +254,20 @@ void generate_declaration(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
         symbol_item* item = find_var(scope, ast->children[1]->token->lexeme);
         // update the offset of the variable
 
+        int size_diff; //
         int size = convert_type_to_bytes(ast->children[0]->type);
+        // keep stack allignment
         if (ast->type == TOKEN_COUNT + SYMBOL_VAR_DEC)
         {
-            scope->bytes_since_last_frame += size;
-            item->offset = scope->bytes_since_last_frame;
-            sprintf(buffer, "%d", size);
-            generator_output(code_gen, sub, sp, buffer);
+            scope->bytes_used_since_last_frame += size;
+            item->offset = scope->bytes_used_since_last_frame;
+            size_diff = calc_stack_size_diff(scope->bytes_used_since_last_frame, scope->bytes_cleared_since_last_frame);
+            if(size_diff)
+            {
+                sprintf(buffer, "%d", size_diff);
+                generator_output(code_gen, sub, sp, buffer);
+                scope->bytes_cleared_since_last_frame += size_diff;
+            }
             if (ast->num_of_children == 3)
             {
                 generate_assignment(code_gen, scope, item, ast->children[2], 0);
@@ -229,10 +275,15 @@ void generate_declaration(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
         } else if (ast->type == TOKEN_COUNT + SYMBOL_ARR_DEC)
         {
             size = size * (int) strtol(ast->children[2]->token->lexeme, NULL, 10);
-            scope->bytes_since_last_frame += size;
-            item->offset = scope->bytes_since_last_frame;
-            sprintf(buffer, "%d", size);
-            generator_output(code_gen, sub, sp, buffer);
+            scope->bytes_used_since_last_frame += size;
+            item->offset = scope->bytes_used_since_last_frame;
+            size_diff = calc_stack_size_diff(scope->bytes_used_since_last_frame, scope->bytes_cleared_since_last_frame);
+            if(size_diff)
+            {
+                sprintf(buffer, "%d", size_diff);
+                generator_output(code_gen, sub, sp, buffer);
+                scope->bytes_cleared_since_last_frame += size_diff;
+            }
             if (ast->num_of_children == 4)
             {
                 generate_arr_dec_ass(code_gen, item, ast->children[3]->token->lexeme);
@@ -259,10 +310,12 @@ void update_params(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
         ast = ast->children[2];
         for (int i = 0; i < ast->num_of_children; i++)
         {
-            size = convert_type_to_bytes(ast->children[i]->type);
+            size = STACK_ENTRY_SIZE; //convert_type_to_bytes(ast->children[i]->type);
             item = find_var(scope, ast->children[i]->children[0]->token->lexeme);
-            item->scope->bytes_since_last_frame += size;
-            item->offset = item->scope->bytes_since_last_frame;
+            item->scope->bytes_used_since_last_frame += size;
+            item->scope->bytes_cleared_since_last_frame += size;
+            item->offset = item->scope->bytes_used_since_last_frame;
+
         }
 
     }

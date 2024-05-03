@@ -55,6 +55,8 @@ int convert_type_to_bytes(int num); // get a type token, and return the amount o
 
 char convert_type_to_size(int num); // get a type token, and return the size character (d,w,b)
 
+const char* convert_type_to_size_full(int num);
+
 void generate_assignment(CodeGen *code_gen, ScopeNode *scope, symbol_item *item, ASTNode *ast, int index);
 
 void generate_var_dec_ass(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast);

@@ -171,7 +171,7 @@ typedef enum {
 #define NUM_OF_REGISTERS 4
 #define LABEL_NAME_MAX_SIZE 10
 #define LABEL_FORMAT ".L%d"
-#define STACK_ENTRY_SIZE 8
+#define STACK_ENTRY_SIZE 16
 #define STACK_OFFSET_FORMAT "[rbp-%d]"
 #define GLOBAL_ADDRESS_FORMAT "[%s]"
 // REGISTERS
@@ -184,9 +184,12 @@ typedef enum {
 // INSTRUCTIONS
 #define mov "\tmov %s, %s\n"
 #define movx "\tmov%c %s, %s\n"
+#define movsx "\tmovsx %s, %s\n"
 #define add "\tadd %s, %s\n"
 #define sub "\tsub %s, %s\n"
-//
+#define imul "\timul %s, %s\n"
+#define idiv "\tidiv %s, %s\n"
+#define xor "\txor %s, %s\n"
 //
 //
 
