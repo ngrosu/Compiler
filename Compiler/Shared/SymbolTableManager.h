@@ -19,6 +19,7 @@ typedef struct ScopeNode{
     int bytes_cleared_since_last_frame;
     struct hash_table* table;
     int curr_index;
+    char* name;
     ScopeType scope;
 } ScopeNode;
 
@@ -36,7 +37,7 @@ typedef struct SymbolItem
 {
     char* name;
     int type[2]; //
-    unsigned int offset;
+    int offset;
     ScopeNode* scope;
     unsigned int size;
     char assigned;

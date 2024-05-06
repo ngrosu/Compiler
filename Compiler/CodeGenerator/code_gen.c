@@ -50,7 +50,7 @@ void free_register(CodeGen* code_gen, int i)
     printf("freed %s\n", get_register_name(code_gen, i));
 }
 
-int create_label(int i)
+int create_label()
 {
     static int label_count = 0;
     label_count++;
@@ -68,7 +68,29 @@ const char* get_label_name(int i) // value will be changed after each call, so m
     return label_name;
 }
 
-const char *get_symbol_code(symbol_item *item, int index)
+void generate_array_access(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast, int result_reg)
+{
+    int addr_reg;
+    symbol_item* item;
+    item = find_var(scope, ast->children[0]->token->lexeme);
+    load_token_to_register(scope, code_gen, result_reg, ast->children[1]);
+    if(convert_type_to_bytes(item->type[0]) != 1)
+    {   // multiply the index by the amount of bytes
+        generator_output(code_gen, "\tmov %s, %d\n", ax, convert_type_to_bytes(item->type[0]));
+        generator_output(code_gen, "\tmul %s\n", get_register_name(code_gen, result_reg));
+        generator_output(code_gen, mov, get_register_name(code_gen, result_reg), ax);
+    }
+    addr_reg = allocate_register(code_gen); // allocate register AFTER getting the index to avoid running out
+    // load the array start address and subtract the index
+    generator_output(code_gen, "\tlea %s, %s ;array start address\n", get_register_name(code_gen, addr_reg), get_symbol_code(item));
+    generator_output(code_gen, item->scope->scope != SCOPE_GLOBAL ?sub : add, // if global array, flip index addition
+                     get_register_name(code_gen, addr_reg), get_register_name(code_gen, result_reg));
+    // transfer the result to the result register
+    generator_output(code_gen, mov, get_register_name(code_gen, result_reg), get_register_name(code_gen, addr_reg));
+    free_register(code_gen, addr_reg);
+}
+
+const char *get_symbol_code(symbol_item *item)
 {
     // static to avoid having to malloc every time
     static char result[TOKEN_MAXSIZE];
@@ -78,9 +100,17 @@ const char *get_symbol_code(symbol_item *item, int index)
         return result;
     }
 
-    int offset = item->scope->parent->bytes_used_since_last_frame + item->offset
-                 - convert_type_to_bytes(item->type[0])*index; // subtract the index to access specific indices
-    snprintf(result, TOKEN_MAXSIZE, STACK_OFFSET_FORMAT, offset);
+    if(item->offset >= 0)
+    {
+        // if the offset is positive, the argument is under the base pointer
+        int offset = item->scope->parent->bytes_used_since_last_frame + item->offset ; // subtract the index to access specific indices
+        snprintf(result, TOKEN_MAXSIZE, STACK_OFFSET_FORMAT, '-', offset);
+    }
+    else
+    {  // if the offset is negative, the variable is an argument to a function, and is above the
+        //base pointer
+        snprintf(result, TOKEN_MAXSIZE, STACK_OFFSET_FORMAT, '+',-item->offset + 8);
+    }
     return result;
 }
 
@@ -92,17 +122,46 @@ void generator_output(CodeGen* code_gen, char* format, ...)
     va_end(args);
 }
 
-void load_token_to_register(ScopeNode* scope, CodeGen* code_gen, int register_num, Token token)
+void load_token_to_register(ScopeNode* scope, CodeGen* code_gen, int register_num, ASTNode *ast)
 {
-    if (token->type == TOKEN_IDENTIFIER)
+    symbol_item* item;
+    switch(ast->type)
     {
-        symbol_item* item = find_var(scope, token->lexeme);
-        generator_output(code_gen, "\tmovsx %s, %s %s\n", get_register_name(code_gen, register_num), convert_type_to_size_full(item->type[0]), get_symbol_code(item, 0));
+        case TOKEN_COUNT + SYMBOL_ARR_ACC:
+            item = find_var(scope, ast->children[0]->token->lexeme);
+            generate_array_access(code_gen, scope, ast, register_num);
+            generator_output(code_gen, "\tmovsx %s, %s [%s]\n",
+                             get_register_name(code_gen, register_num),
+                             convert_type_to_size_full(item->type[0]),
+                             get_register_name(code_gen, register_num));
+//            load_token_to_register(scope, code_gen, register_num, ast->children[1]);
+//            if(convert_type_to_bytes(item->type[0]) != 1)
+//            {
+//                generator_output(code_gen, "\tmov %s, %d\n", ax, convert_type_to_bytes(item->type[0]));
+//                generator_output(code_gen, "\tmul %s\n", get_register_name(code_gen, register_num));
+//                generator_output(code_gen, mov, get_register_name(code_gen, register_num), ax);
+//            }
+//            addr_reg = allocate_register(code_gen);
+//            generator_output(code_gen, "\tlea %s, %s\n", get_register_name(code_gen, addr_reg), get_symbol_code(item));
+//            generator_output(code_gen, sub, get_register_name(code_gen, addr_reg), get_register_name(code_gen, register_num));
+//            generator_output(code_gen, "\tmovsx %s, %s [%s]\n", get_register_name(code_gen, register_num),
+//                             convert_type_to_size_full(item->type[0]), get_register_name(code_gen, addr_reg));
+//            free_register(code_gen, addr_reg);
+            break;
+        case TOKEN_IDENTIFIER:
+            item = find_var(scope, ast->token->lexeme);
+            generator_output(code_gen, "\tmovsx %s, %s %s\n", get_register_name(code_gen, register_num),
+                             convert_type_to_size_full(item->type[0]), get_symbol_code(item));
+            break;
+        case TOKEN_INT_LITERAL:
+            generator_output(code_gen, mov, get_register_name(code_gen, register_num), ast->token->lexeme);
+            break;
+        default:
+            printf("NON INTEGER OR IDENTIFIER TOKEN PASSED TO LOAD TOKEN TO REGISTER\n");
+            printf("-------------------------------|   %s   |-----------------------------\n",
+                   ast->token->lexeme);
     }
-    else
-    {
-        generator_output(code_gen, mov, get_register_name(code_gen, register_num), token->lexeme);
-    }
+
 }
 
 int convert_type_to_bytes(int num)
@@ -158,7 +217,106 @@ const char* convert_type_to_size_full(int num)
     return res;
 }
 
-int generate_binary_expressions(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast, int r1, int r2)
+int generate_comparison_expressions(CodeGen *code_gen, ASTNode *ast, int r1, int r2)
+{
+    int true_label = create_label();
+    int end_label = create_label();
+    generator_output(code_gen, "\tcmp %s, %s\n", get_register_name(code_gen, r1), get_register_name(code_gen, r2));
+    switch(ast->type)
+    {
+        case TOKEN_EQUAL_EQUAL_OP:
+            generator_output(code_gen, "\tje %s\n", get_label_name(true_label));
+            break;
+        case TOKEN_NOT_EQUAL_OP:
+            generator_output(code_gen, "\tjne %s\n", get_label_name(true_label));
+            break;
+        case TOKEN_GREATER_THAN_OP:
+            generator_output(code_gen, "\tjg %s\n", get_label_name(true_label));
+            break;
+        case TOKEN_GREATER_THAN_EQUAL_OP:
+            generator_output(code_gen, "\tjge %s\n", get_label_name(true_label));
+            break;
+        case TOKEN_LESS_THAN_OP:
+            generator_output(code_gen, "\tjl %s\n", get_label_name(true_label));
+            break;
+        case TOKEN_LESS_THAN_EQUAL_OP:
+            generator_output(code_gen, "\tjle %s\n", get_label_name(true_label));
+            break;
+    }
+
+    generator_output(code_gen, mov, get_register_name(code_gen, r1), "0");
+    generator_output(code_gen, "\tjmp %s\n", get_label_name(end_label));
+    generator_output(code_gen, "%s:\n", get_label_name(true_label));
+    generator_output(code_gen, mov, get_register_name(code_gen, r1), "1");
+    generator_output(code_gen, "%s:\n", get_label_name(end_label));
+    free_register(code_gen, r2);
+    return r1;
+}
+
+int generate_and_or(CodeGen *code_gen, ASTNode *ast, int r1, int r2)
+{
+    int end_label = create_label();
+    int true_label = create_label();
+    generator_output(code_gen, "\tcmp %s, 0\n", get_register_name(code_gen, r1));
+    if(ast->type == TOKEN_AND){
+        generator_output(code_gen, "\tje %s\n", get_label_name(end_label));
+    }
+    else{
+        generator_output(code_gen, "\tjne %s\n", get_label_name(true_label));}
+
+    generator_output(code_gen, "\tcmp %s, 0\n", get_register_name(code_gen, r2));
+
+    generator_output(code_gen, "\tje %s\n", get_label_name(end_label));
+    generator_output(code_gen, "%s:\n", get_label_name(true_label));
+    generator_output(code_gen, mov, get_register_name(code_gen, r1), "1");
+    generator_output(code_gen, "%s:\n", get_label_name(end_label));
+    generator_output(code_gen, mov, get_register_name(code_gen, r1), "0");
+    free_register(code_gen, r2);
+    return r1;
+}
+
+void generate_if_else(CodeGen *code_gen, ScopeNode* scope, ASTNode *ast)
+{
+    int end_label = create_label();
+    int if_label = create_label();
+    ScopeNode* tempScope;
+
+    int r1 = generate_expression(code_gen, scope, ast->children[0]); // evaluate the condition
+
+    generator_output(code_gen, "\tcmp %s, 0  ;if check\n", get_register_name(code_gen, r1));
+    free_register(code_gen, r1);
+    generator_output(code_gen, "\tjne %s ;jmp to if\n", get_label_name(if_label)); // if true, go to the if label
+    // otherwise continues down to the else section
+    if(ast->type == SYMBOL_IF_ELSE+TOKEN_COUNT)
+    {
+        tempScope = scope->children[scope->curr_index+1]; // get the else scope
+        tempScope->bytes_used_since_last_frame = scope->bytes_used_since_last_frame; // transfer variable info
+        tempScope->bytes_cleared_since_last_frame = scope->bytes_cleared_since_last_frame;
+
+        generate_code_block(code_gen, tempScope, ast->children[2]); // generate code block
+
+        generator_output(code_gen, "\tadd %s, %d\n", sp, // set the stack pointer back to what it was
+                         tempScope->bytes_cleared_since_last_frame - scope->bytes_cleared_since_last_frame);
+    }
+    // if block
+    generator_output(code_gen, "\tjmp %s\n", get_label_name(end_label));
+    tempScope = scope->children[scope->curr_index]; // get the if scope
+    tempScope->bytes_used_since_last_frame = scope->bytes_used_since_last_frame; // transfer variable info
+    tempScope->bytes_cleared_since_last_frame = scope->bytes_cleared_since_last_frame;
+
+    generator_output(code_gen, "%s:\n", get_label_name(if_label));
+    generate_code_block(code_gen, tempScope, ast->children[1]); // generate code block
+    generator_output(code_gen, "\tadd %s, %d\n", sp, // set the stack pointer back to what it was
+                     tempScope->bytes_cleared_since_last_frame - scope->bytes_cleared_since_last_frame);
+
+    generator_output(code_gen, "%s:  ; if end\n", get_label_name(end_label));
+    if(ast->type == SYMBOL_IF_ELSE+TOKEN_COUNT)
+    {scope->curr_index += 2;}
+    else
+    {scope->curr_index++;}
+}
+
+int generate_binary_expressions(CodeGen *code_gen, ASTNode *ast, int r1, int r2)
 {
     switch(ast->type)
     {
@@ -170,14 +328,42 @@ int generate_binary_expressions(CodeGen* code_gen, ScopeNode* scope, ASTNode* as
             generator_output(code_gen, sub, get_register_name(code_gen, r1), get_register_name(code_gen, r2));
             free_register(code_gen, r2);
             break;
+        case TOKEN_BITWISE_AND:
+            generator_output(code_gen, and, get_register_name(code_gen, r1), get_register_name(code_gen, r2));
+            free_register(code_gen, r2);
+            break;
+        case TOKEN_BITWISE_OR:
+            generator_output(code_gen, or, get_register_name(code_gen, r1), get_register_name(code_gen, r2));
+            free_register(code_gen, r2);
+            break;
+        case TOKEN_BITWISE_XOR:
+            generator_output(code_gen, xor, get_register_name(code_gen, r1), get_register_name(code_gen, r2));
+            free_register(code_gen, r2);
+            break;
         case TOKEN_ASTERISK:
             generator_output(code_gen, imul, get_register_name(code_gen, r1), get_register_name(code_gen, r2));
             free_register(code_gen, r2);
             break;
         case TOKEN_F_SLASH:
-            generator_output(code_gen, idiv, get_register_name(code_gen, r1), get_register_name(code_gen, r2));
+            generator_output(code_gen, mov, ax, get_register_name(code_gen, r1));
+            generator_output(code_gen, "\txor rdx, rdx\n");
+            generator_output(code_gen, idiv, get_register_name(code_gen, r2));
             free_register(code_gen, r2);
+            generator_output(code_gen, mov, get_register_name(code_gen, r1), ax);
             break;
+        case TOKEN_EQUAL_EQUAL_OP:
+        case TOKEN_NOT_EQUAL_OP:
+        case TOKEN_LESS_THAN_EQUAL_OP:
+        case TOKEN_LESS_THAN_OP:
+        case TOKEN_GREATER_THAN_EQUAL_OP:
+        case TOKEN_GREATER_THAN_OP:
+            generate_comparison_expressions(code_gen, ast, r1, r2);
+            break;
+        case TOKEN_OR:
+        case TOKEN_AND:
+            generate_and_or(code_gen, ast, r1, r2);
+            break;
+
     }
     return r1;
 }
@@ -186,19 +372,32 @@ int generate_expression(CodeGen *code_gen, ScopeNode* scope, ASTNode* ast)
 {
     int r;
     int r_temp;
-    if(ast->num_of_children==0)
+    if(ast->type == TOKEN_COUNT + SYMBOL_FUNC_CALL)
+    {
+        return generate_func_call(code_gen, scope, ast);
+    }
+    else if(ast->type == TOKEN_COUNT + SYMBOL_ARR_ACC)
     {
         r = allocate_register(code_gen);
-        load_token_to_register(scope, code_gen, r, ast->token);
+        load_token_to_register(scope, code_gen, r, ast);
+        return r;
+    }
+    else if(ast->num_of_children==0)
+    {
+        r = allocate_register(code_gen);
+        load_token_to_register(scope, code_gen, r, ast);
         return r;
     }
     else if(ast->num_of_children==2)
     {
         r = generate_expression(code_gen, scope, ast->children[0]);
         r_temp = generate_expression(code_gen, scope, ast->children[1]);
-        return generate_binary_expressions(code_gen, scope, ast, r, r_temp);
+        return generate_binary_expressions(code_gen, ast, r, r_temp);
     }
-
+    else
+    {
+        return 0; // TODO UNARY EXPRESSION
+    }
 }
 
 void generate_assignment(CodeGen *code_gen, ScopeNode* scope, symbol_item *item, ASTNode *ast, int index)
@@ -206,32 +405,42 @@ void generate_assignment(CodeGen *code_gen, ScopeNode* scope, symbol_item *item,
     //symbol_item* item = find_var(scope, ast->children[0]->token->lexeme);
     if(ast->type == TOKEN_INT_LITERAL)
     {
-        generator_output(code_gen, movx,
-                         convert_type_to_size(item->type[0])
-                         , get_symbol_code(item, 0), ast->token->lexeme);
+        int r = allocate_register(code_gen);
+        generator_output(code_gen, "\tmov %s%c, %s\n",
+                         get_register_name(code_gen, r), convert_type_to_size(item->type[0]),
+                         ast->token->lexeme);
+        generator_output(code_gen, "\tmov %s %s, %s%c\n",
+                         convert_type_to_size_full(item->type[0])
+                         , get_symbol_code(item), get_register_name(code_gen, r), convert_type_to_size(item->type[0]));
+        free_register(code_gen, r);
     }
     else
     {
         int r = generate_expression(code_gen, scope, ast);
-        char size = convert_type_to_size(item->type[0]);
-        generator_output(code_gen, "\tmov%c %s, %s%c", size,
-                         get_symbol_code(item, 0), get_register_name(code_gen, r), size);
+        const char* size = convert_type_to_size_full(item->type[0]);
+        char size_c = convert_type_to_size(item->type[0]);
+        generator_output(code_gen, "\tmov %s %s, %s%c\n", size,
+                         get_symbol_code(item), get_register_name(code_gen, r), size_c);
         free_register(code_gen, r);
     }
 }
 
 void generate_arr_dec_ass(CodeGen* code_gen, symbol_item* item, const char* s)
 {
-    char size = convert_type_to_size(item->type[0]);
+    const char* size = convert_type_to_size_full(item->type[0]);
     char buffer[4] = "\"0\"";
     int index = 0;
     while(*s)
     {
         buffer[1] = *s;
-        generator_output(code_gen, movx, size, get_symbol_code(item, index), buffer);
+        generator_output(code_gen, "\tmov %s [%s-%d], %s\n", size, bp,
+                         item->scope->parent->bytes_used_since_last_frame + item->offset +
+                         index*(convert_type_to_bytes(item->type[0])),
+                         buffer);
         index++;
         s++;
     }
+
 }
 
 int calc_stack_size_diff(int bytes_used, int bytes_cleared)
@@ -239,8 +448,8 @@ int calc_stack_size_diff(int bytes_used, int bytes_cleared)
     int diff = 0;
     if(bytes_used > bytes_cleared)
     {
-        diff = (bytes_used/STACK_ENTRY_SIZE + 1)*
-                     STACK_ENTRY_SIZE - bytes_cleared;
+        diff = (bytes_used / STACK_ALLIGNMENT_SIZE + 1) *
+               STACK_ALLIGNMENT_SIZE - bytes_cleared;
     }
     return diff;
 }
@@ -274,10 +483,9 @@ void generate_declaration(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
             }
         } else if (ast->type == TOKEN_COUNT + SYMBOL_ARR_DEC)
         {
+            item->offset = scope->bytes_used_since_last_frame + size;
             size = size * (int) strtol(ast->children[2]->token->lexeme, NULL, 10);
-            scope->bytes_used_since_last_frame += size;
-            item->offset = scope->bytes_used_since_last_frame;
-            size_diff = calc_stack_size_diff(scope->bytes_used_since_last_frame, scope->bytes_cleared_since_last_frame);
+            size_diff = calc_stack_size_diff(scope->bytes_used_since_last_frame + size, scope->bytes_cleared_since_last_frame);
             if(size_diff)
             {
                 sprintf(buffer, "%d", size_diff);
@@ -288,6 +496,7 @@ void generate_declaration(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
             {
                 generate_arr_dec_ass(code_gen, item, ast->children[3]->token->lexeme);
             }
+            scope->bytes_used_since_last_frame += size;
         }
     }
 }
@@ -300,23 +509,106 @@ void generate_code_block(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
     }
 }
 
-void update_params(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
+int generate_func_call(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
 {
-    int size;
+    // load arguments
+    int curr_size = 0;
+    int allocated_size = 0;
+    ASTNode* args = ast->children[1];
+    symbol_item* func = find_var(scope, ast->children[0]->token->lexeme);
+    Param* params = func->parameters;
+
+
+    generator_output(code_gen, "\tsub %s, %d\n", sp, STACK_ENTRY_SIZE);
+    allocated_size+=STACK_ENTRY_SIZE;
+    for(int i = 0; i < args->num_of_children; i++)
+    {
+        curr_size += convert_type_to_bytes(params[i].type);
+        if(curr_size > allocated_size)
+        {
+            generator_output(code_gen, "\tsub %s, %d\n", sp, STACK_ENTRY_SIZE*2);
+            allocated_size+=STACK_ENTRY_SIZE*2;
+        }
+        int r1 = generate_expression(code_gen, scope, args->children[i]);
+        generator_output(code_gen, "\tmov %s [%s-%d], %s%c\n", convert_type_to_size_full(params[i].type),
+                         bp, curr_size + scope->bytes_cleared_since_last_frame,
+                         get_register_name(code_gen, r1),
+                         convert_type_to_size(params[i].type));
+        free_register(code_gen, r1);
+    }
+
+    // call function
+    generator_output(code_gen, "\tcall _%s\n", func->name);
+
+    // reset the stack
+    generator_output(code_gen, "\tadd %s, %d\n", sp, allocated_size);
+
+    // return value
+    int r = allocate_register(code_gen);
+    generator_output(code_gen, "\tmov %s, %s\n", get_register_name(code_gen, r), ax);
+
+
+    return r;
+}
+
+void generate_return(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
+{
+    int r = generate_expression(code_gen, scope, ast->children[0]);
+    scope = is_in_scope(scope, SCOPE_FUNCTION);
+    generator_output(code_gen, "\txor rax, rax\n");
+    generator_output(code_gen, mov, ax, get_register_name(code_gen, r));
+    generator_output(code_gen, "\tjmp _%s_epilogue\n", scope->name);
+    free_register(code_gen, r);
+}
+
+void generate_function(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
+{
+    char* func_name = ast->children[1]->token->lexeme;
+
+    generator_output(code_gen, "_%s:\n", func_name);
+    update_params(scope, ast); // account for parameters on stack
+    // push rbp
+    generator_output(code_gen, "\tpush %s\n", bp);
+    generator_output(code_gen, "\tmov %s, %s\n", bp, sp);
+
+    generate_code_block(code_gen, scope, ast->children[ast->num_of_children-1]);
+
+    generator_output(code_gen, "_%s_epilogue:\n", func_name);
+    generator_output(code_gen, mov, sp, bp);
+    generator_output(code_gen, "\tpop %s\n", bp);
+    generator_output(code_gen, "\tret\n\n", bp);
+}
+
+
+void update_params(ScopeNode *scope, ASTNode *ast)
+{
     symbol_item* item;
+    int total_size = 0;
 
     if (ast->num_of_children == 4)
     {
-        ast = ast->children[2];
-        for (int i = 0; i < ast->num_of_children; i++)
+        ASTNode* params = ast->children[2];
+        for (int i = 0; i < params->num_of_children; i++)
         {
-            size = STACK_ENTRY_SIZE; //convert_type_to_bytes(ast->children[i]->type);
-            item = find_var(scope, ast->children[i]->children[0]->token->lexeme);
-            item->scope->bytes_used_since_last_frame += size;
-            item->scope->bytes_cleared_since_last_frame += size;
-            item->offset = item->scope->bytes_used_since_last_frame;
-
+            total_size += convert_type_to_bytes(ast->children[i]->type);
         }
+        total_size = ((total_size+7)/16+1)*16;
+        for (int i = 0; i < params->num_of_children; i++)
+        {
+            item = find_var(scope, params->children[i]->children[0]->token->lexeme);
+            total_size -= convert_type_to_bytes(item->type[0]);
+            item->offset = -total_size;
+        }
+//        for (int i = 0; i < ast->num_of_children; i++)
+//        {
+//            size = STACK_ENTRY_SIZE; //convert_type_to_bytes(ast->children[i]->type);
+//            item = find_var(scope, ast->children[i]->children[0]->token->lexeme);
+//            item->scope->bytes_used_since_last_frame += size;
+//            item->scope->bytes_cleared_since_last_frame += size;
+//            item->offset = item->scope->bytes_used_since_last_frame; // -(i+STACK_FUNC_START_PUSHES)*STACK_ENTRY
+//            // (need to check the correctness of this change first)
+//
+//        }
 
     }
 }
@@ -326,9 +618,12 @@ void generate_statement(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
     switch (ast->type)
     {
         case TOKEN_COUNT + SYMBOL_FUNC_DEC:
-            update_params(code_gen, scope->children[scope->curr_index], ast);
-            generate_code_block(code_gen, scope->children[scope->curr_index], ast->children[ast->num_of_children-1]);
+            generate_function(code_gen, scope->children[scope->curr_index], ast);
             scope->curr_index++;
+            break;
+        case TOKEN_COUNT + SYMBOL_IF:
+        case TOKEN_COUNT + SYMBOL_IF_ELSE:
+            generate_if_else(code_gen, scope, ast);
             break;
         case TOKEN_COUNT + SYMBOL_ASSIGNMENT:
             generate_assignment(code_gen, scope, find_var(scope, ast->children[0]->token->lexeme), ast->children[1], 0);
@@ -337,16 +632,124 @@ void generate_statement(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
         case TOKEN_COUNT + SYMBOL_ARR_DEC:
             generate_declaration(code_gen, scope, ast);
             break;
+        case TOKEN_COUNT + SYMBOL_OUTPUT:
+            generate_output_stmt(code_gen, scope, ast);
+            break;
+        case TOKEN_COUNT + SYMBOL_INPUT:
+            generate_input_stmt(code_gen, scope, ast);
+            break;
+        case TOKEN_COUNT + SYMBOL_RETURN:
+            generate_return(code_gen, scope, ast);
+            break;
+        case TOKEN_PLUS_OP:
+        case TOKEN_MINUS_OP:
+        case TOKEN_BITWISE_AND:
+        case TOKEN_BITWISE_OR:
+        case TOKEN_BITWISE_XOR:
+        case TOKEN_ASTERISK:
+        case TOKEN_F_SLASH:
+        case TOKEN_COUNT + SYMBOL_FUNC_CALL:
+            free_register(code_gen, generate_expression(code_gen, scope, ast));
+            break;
+        default:
+            break;
     }
+}
+
+void generate_init_io(CodeGen* code_gen)
+{
+    generator_output(code_gen, "\tsub %s, 8\n" // align stack
+                               "\tsub %s, 32\n"  // clear shadow space
+                               "\tmov ECX, %d\n"
+                               "\tcall GetStdHandle\n"
+                               "\tmov qword [REL _StandardOHandle], %s\n"
+                               "\tmov ECX, %d\n"
+                               "\tcall GetStdHandle\n"
+                               "\tmov qword [REL _StandardIHandle], %s\n"
+                               "\tadd %s, 40\n", sp, sp, STD_OUTPUT_HANDLE, ax, STD_INPUT_HANDLE, ax, sp); // revert stack
+}
+
+void generate_output_stmt(CodeGen *code_gen, ScopeNode *scope, ASTNode *ast)
+{
+    int r1 = generate_expression(code_gen, scope, ast->children[0]);
+    const char* r1_n = get_register_name(code_gen, r1);
+    int r2 = allocate_register(code_gen);
+    const char* r2_n = get_register_name(code_gen, r2);
+    generator_output(code_gen, mov, ax, r1_n);
+    generator_output(code_gen, "\tmov %sd, 10; output\n", r1_n);
+    generator_output(code_gen, "\tlea %s, [REL _Message+9]\n", r2_n);
+
+    int label = create_label();
+    generator_output(code_gen, "%s:\n", get_label_name(label));
+    generator_output(code_gen, "\txor rdx, rdx\n"
+                               "\tdiv %sd\n"
+                               "\tadd dl, '0'\n", r1_n);
+
+    generator_output(code_gen, "\tmov byte [%s], dl\n"
+                               "\tdec %s\n", r2_n, r2_n);
+
+    generator_output(code_gen, "\ttest rax, rax\n"
+                               "\tjnz %s\n", get_label_name(label));
+
+    generator_output(code_gen, "\tinc %s\n", r2_n);
+    free_register(code_gen, r1);
+
+
+    generator_output(code_gen, "\tpush r8\n"
+                               "\tpush r9\n");
+
+    generator_output(code_gen, sub, sp, "40"); // shadow space + 5th parameter
+
+    generator_output(code_gen, "\tmov rcx, qword [REL _StandardOHandle]\n" // file handle
+                               "\tmov rdx, %s\n" // load message location
+                               "\tlea r9, [REL _Written]\n" // save the amount of chars printed
+                               "\tmov qword [rsp+32], 0\n", r2_n, 10); // pass NULL to 5th param
+    generator_output(code_gen, "\tlea r8, [REL _Message+10]\n" // the amount of characters to print
+                               "\tsub r8, rdx\n");
+
+    free_register(code_gen, r2);
+    generator_output(code_gen, "\tcall WriteFile\n");
+    generator_output(code_gen, add, sp, "40"); // restore stack
+
+    generator_output(code_gen, "\tpop r9\n"
+                               "\tpop r8\n");
+}
+
+void generate_input_stmt(CodeGen *code_gen, ScopeNode *scope, ASTNode *ast)
+{
+    generator_output(code_gen, sub, sp, "40"); // shadow space + 5th parameter
+    generator_output(code_gen, mov, cx, "[REL _StandrardIHandle]"); // handle
+    generator_output(code_gen, "\tlea %s, [REL %s]\n", dx, INPUT_BUFFER); // input buffer
+    generator_output(code_gen, mov, R8, "1"); // number of chars to read
+    generator_output(code_gen, "\tlea %s, %s\n", R9, "_Written"); // unused buffer of how many chars were read
+    generator_output(code_gen, "\tmov [%s + %d], %s\n", sp, 32, "0"); // set input control parameter to off
+
+    generator_output(code_gen, "\tcall ReadConsole\n");
+    generator_output(code_gen, add, sp, "40"); // revert stack
+
+
 }
 
 void generate_code(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
 {
+    generator_output(code_gen, "extern ExitProcess\n");
+    generator_output(code_gen, "extern GetStdHandle\n");
+    generator_output(code_gen, "extern WriteFile\n\n");
+    generator_output(code_gen, "extern ReadConsole\n\n");
+
+    generator_output(code_gen, "SECTION .bss\n");
+    generator_output(code_gen, "\talignb 8\n");
+    generator_output(code_gen, "\t_StandardOHandle resq 1\n");
+    generator_output(code_gen, "\t_StandardIHandle resq 1\n");
+    generator_output(code_gen, "\t_Written resq 1\n");
+
+
     //-----Creation of data segment-----
     generator_output(code_gen, "SECTION .data\n");
+    generator_output(code_gen, "\t_Message db 10 dup(0)\n"); // reserve 10 bytes for output
+    generator_output(code_gen, "\t_ReadChar db 0\n"); // reserve 10 bytes for output
     for(int i = 0; i< ast->num_of_children; i++)
     {
-        char* data;
         char size;
         ASTNode* child = ast->children[i];
         size = convert_type_to_size(child->children[0]->type);
@@ -366,8 +769,13 @@ void generate_code(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
             int leftover = strtol(child->children[2]->token->lexeme, NULL, 10);
             if (child->num_of_children == 4)
             {
-                generator_output(code_gen, "%s:\td%c \"%s\"\n", child->children[1]->token->lexeme, size, child->children[3]->token->lexeme);
+                generator_output(code_gen, "%s: d%c \"%c\"\n", child->children[1]->token->lexeme, size, child->children[3]->token->lexeme[0]);
                 leftover -= strlen(child->children[3]->token->lexeme);
+                int len = (int)strlen(child->children[3]->token->lexeme);
+                for(int j = 1; j < len; j++)
+                {
+                    generator_output(code_gen, "\td%c \"%c\"\n", size, child->children[3]->token->lexeme[j]);
+                }
             }
             if(leftover != 0)
             {
@@ -377,6 +785,12 @@ void generate_code(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
     }
     //-----Start of code segment-----
     generator_output(code_gen, "\nSECTION .text\n");
+
+    //call main
+    generator_output(code_gen, "_start:\n");
+    generate_init_io(code_gen);
+    generator_output(code_gen, "\tcall _main\n"
+                               "\tcall ExitProcess\n");
 
     generate_code_block(code_gen, scope, ast);
     for(int i = 0; i< ast->num_of_children; i++)

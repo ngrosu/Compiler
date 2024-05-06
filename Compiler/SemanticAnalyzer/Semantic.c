@@ -446,12 +446,31 @@ int analyze_func_call(ASTNode* ast, ScopeNode* scope)
                     result = 0;
                     char err[61 + TOKEN_MAXSIZE];
                     sprintf(err, " received argument of type %s for parameter \"%s\" of type %s", get_token_name(temp_type),
-                            item->parameters[i].name, get_token_name(item->type[0]));
+                            item->parameters[i].name, get_token_name(item->parameters[i].type));
                     report_error(ERR_SEMANTIC, ast->start_line, ast->children[0]->token->lexeme, err);
 
                 }
             }
         }
+    }
+    return result;
+}
+
+int analyze_input(ASTNode* ast, ScopeNode* scope)
+{
+    int result = 1;
+    switch (ast->type)
+    {
+        case TOKEN_COUNT + SYMBOL_ARR_ACC:
+            result &= analyze_arr_acc(ast, scope);
+            break;
+        case TOKEN_IDENTIFIER:
+            result &= analyze_var_acc(ast, scope);
+            break;
+        default:
+            result = 0;
+            report_error(ERR_SEMANTIC, ast->start_line, "Input must be into array or variable", NULL);
+            break;
     }
     return result;
 }
@@ -515,6 +534,12 @@ int analyze_statements(ASTNode *ast, ScopeNode *scope, int scope_index)
                 case TOKEN_BITWISE_XOR:
                 case TOKEN_BITWISE_NOT:
                     error |= !analyze_expression(child, scope);
+                    break;
+                case TOKEN_COUNT + SYMBOL_OUTPUT:
+                    error |= !analyze_expression(child->children[0], scope);
+                    break;
+                case TOKEN_COUNT + SYMBOL_INPUT:
+                    error |= !analyze_input(child->children[0], scope);
                     break;
                 default:
                     printf("\nNo handling for statement type %s\n", get_symbol_name(child->type));

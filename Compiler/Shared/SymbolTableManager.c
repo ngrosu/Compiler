@@ -24,6 +24,7 @@ ScopeNode *init_scope_node(ScopeType scope, TokenType return_type, unsigned long
     result->bytes_used_since_last_frame = 0;
     result->bytes_cleared_since_last_frame = 0;
     result->start_line = start_line;
+    result->name = "";
     return result;
 }
 
@@ -104,6 +105,7 @@ int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
                 report_error(ERR_SEMANTIC, line, "Symbol Already Declared | ", item->name);
             }
             new_node = init_scope_node(SCOPE_FUNCTION, ast->children[0]->type, ast->start_line);
+            new_node->name = ast->children[1]->token->lexeme;
             for(int i = 0; i<num_of_items; i++)
             {
                 item = init_symbol_item(params[i].name, params[i].type, SYMBOL_VAR_DEC + TOKEN_COUNT,

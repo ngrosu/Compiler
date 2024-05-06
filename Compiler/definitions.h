@@ -171,10 +171,19 @@ typedef enum {
 #define NUM_OF_REGISTERS 4
 #define LABEL_NAME_MAX_SIZE 10
 #define LABEL_FORMAT ".L%d"
-#define STACK_ENTRY_SIZE 16
-#define STACK_OFFSET_FORMAT "[rbp-%d]"
-#define GLOBAL_ADDRESS_FORMAT "[%s]"
+#define STACK_ALLIGNMENT_SIZE 16
+#define STACK_ENTRY_SIZE 8
+#define STACK_OFFSET_FORMAT "[rbp%c%d]"
+#define STACK_FUNC_START_PUSHES 2
+#define STD_OUTPUT_HANDLE (-11)
+#define STD_INPUT_HANDLE (-10)
+#define INPUT_BUFFER "_ReadChar"
+#define OUTPUT_BUFFER "_Message"
+#define GLOBAL_ADDRESS_FORMAT "[REL %s]"
 // REGISTERS
+#define ax "rax"
+#define cx "rcx"
+#define dx "rdx"
 #define bp "rbp"
 #define sp "rsp"
 #define R8 "r8"
@@ -183,15 +192,15 @@ typedef enum {
 #define R11 "r11"
 // INSTRUCTIONS
 #define mov "\tmov %s, %s\n"
-#define movx "\tmov%c %s, %s\n"
+#define movx "\tmov %s %s, %s\n"
 #define movsx "\tmovsx %s, %s\n"
 #define add "\tadd %s, %s\n"
 #define sub "\tsub %s, %s\n"
 #define imul "\timul %s, %s\n"
-#define idiv "\tidiv %s, %s\n"
+#define idiv "\tidiv %s\n"
 #define xor "\txor %s, %s\n"
-//
-//
+#define and "\tand %s, %s\n"
+#define or "\tor %s, %s\n"
 
 
 // ERROR

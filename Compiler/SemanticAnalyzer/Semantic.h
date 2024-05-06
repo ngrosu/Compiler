@@ -26,6 +26,7 @@ int analyze_for(ASTNode *ast, ScopeNode *scope);
 int analyze_if(ASTNode* ast, ScopeNode* scope);
 int analyze_else(ASTNode* ast, ScopeNode* scope);
 int analyze_func_call(ASTNode* ast, ScopeNode* scope);
+int analyze_input(ASTNode* ast, ScopeNode* scope);
 int analyze_bool(ASTNode* ast, ScopeNode* scope);
 int analyze_expression(ASTNode* ast, ScopeNode* scope);
 int resolve_types(int type1, int type2);
