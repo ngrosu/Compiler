@@ -89,6 +89,7 @@ void init_DFA(DFA dfa)
     add_symbol_token_to_DFA(dfa, "|", TOKEN_BITWISE_OR, START_STATE);
     add_symbol_token_to_DFA(dfa, "|", TOKEN_OR, dfa->num_of_states-1);
     add_symbol_token_to_DFA(dfa, "!", TOKEN_NOT, START_STATE);
+    add_symbol_token_to_DFA(dfa, "=", TOKEN_NOT_EQUAL_OP, dfa->num_of_states-1);
     add_symbol_token_to_DFA(dfa, "~", TOKEN_BITWISE_NOT, START_STATE);
     add_symbol_token_to_DFA(dfa, "^", TOKEN_BITWISE_XOR, START_STATE);
 

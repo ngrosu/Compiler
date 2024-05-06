@@ -49,7 +49,15 @@ void load_token_to_register(ScopeNode* scope, CodeGen* code_gen, int register_nu
 
 void generate_statement(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast);
 
+void generate_while(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast);
+
+void generate_for(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast);
+
 void generate_code(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast);
+
+void load_register_to_symbol(CodeGen* code_gen, ScopeNode* scope, ASTNode* symbol_ast, int source_reg);
+
+void load_number_to_symbol(CodeGen* code_gen, ScopeNode* scope, ASTNode* symbol_ast, char* num);
 
 void generate_input_stmt(CodeGen *code_gen, ScopeNode *scope, ASTNode *ast);
 
@@ -61,7 +69,7 @@ char convert_type_to_size(int num); // get a type token, and return the size cha
 
 const char* convert_type_to_size_full(int num);
 
-void generate_assignment(CodeGen *code_gen, ScopeNode *scope, symbol_item *item, ASTNode *ast, int index);
+void generate_assignment(CodeGen *code_gen, ScopeNode* scope, ASTNode* ast);
 
 int generate_expression(CodeGen *code_gen, ScopeNode* scope, ASTNode* ast);
 

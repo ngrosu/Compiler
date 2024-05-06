@@ -123,10 +123,11 @@ int analyze_var_dec(ASTNode* ast, ScopeNode* scope)
 
 int analyze_assignment(ASTNode* ast, ScopeNode* scope)
 {
+    symbol_item* item;
     int result = 1;
-    symbol_item* item = check_var_declared(ast->children[0], scope);
     if (ast->children[0]->type == TOKEN_IDENTIFIER) // check if assigning to an identifier
     {
+        item = check_var_declared(ast->children[0], scope);
         if (item != NULL)
         {
             if(item->type[1] != SYMBOL_VAR_DEC + TOKEN_COUNT)
@@ -164,8 +165,10 @@ int analyze_assignment(ASTNode* ast, ScopeNode* scope)
             result = 0;
     }
     else // if not identifier, it's an array
+    {
+        item = check_var_declared(ast->children[0]->children[0], scope);
         result &= analyze_arr_acc(ast->children[0], scope);
-
+    }
     result &= analyze_expression(ast->children[1], scope);
     int type = get_expression_type(ast->children[1], scope);
     if (type == TOKEN_ERROR)
@@ -459,12 +462,19 @@ int analyze_func_call(ASTNode* ast, ScopeNode* scope)
 int analyze_input(ASTNode* ast, ScopeNode* scope)
 {
     int result = 1;
+    symbol_item* item;
     switch (ast->type)
     {
         case TOKEN_COUNT + SYMBOL_ARR_ACC:
+            item = find_var(scope, ast->children[0]->token->lexeme);
+            if(item!=NULL)
+                item->assigned=1;
             result &= analyze_arr_acc(ast, scope);
             break;
         case TOKEN_IDENTIFIER:
+            item = find_var(scope, ast->token->lexeme);
+            if(item!=NULL)
+                item->assigned=1;
             result &= analyze_var_acc(ast, scope);
             break;
         default:

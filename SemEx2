@@ -1,14 +1,13 @@
-int msg[10] = "Hey there!";
+char msg[10] = "Hello man!";
 
-int helper: int a
+void helper
 {
-    OUTPUT msg[a];
-    return 0;
+    for(int i = 0; i < 10; i = i + 1;)
+    {
+        OUTPUT msg[i];
+    }
 }
-
-
 void main
 {
-    int a = 3;
-    a = helper(1);
+    helper();
 }
