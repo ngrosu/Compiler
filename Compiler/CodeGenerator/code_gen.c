@@ -98,7 +98,7 @@ const char *get_symbol_code(symbol_item *item)
     if(item->offset >= 0)
     {
         // if the offset is positive, the argument is under the base pointer
-        int offset = item->scope->parent->bytes_used_since_last_frame + item->offset ; // subtract the index to access specific indices
+        int offset = item->offset ; // subtract the index to access specific indices
         snprintf(result, TOKEN_MAXSIZE, STACK_OFFSET_FORMAT, '-', offset);
     }
     else
@@ -378,6 +378,26 @@ int generate_binary_expressions(CodeGen *code_gen, ASTNode *ast, int r1, int r2)
     return r1;
 }
 
+int generate_unary_expression(CodeGen *code_gen, ASTNode *ast, int r1)
+{
+    const char* r1_n = get_register_name(code_gen, r1);
+    switch (ast->type)
+    {
+        case TOKEN_NOT:
+            generator_output(code_gen, "\tcmp %s, %s\n", r1_n, "0");
+            generator_output(code_gen, "\tcmove %s, %s\n", r1_n, "1"); // move based on opposite of result
+            generator_output(code_gen, "\tcmovne %s, %s\n", r1_n, "0");
+            break;
+        case TOKEN_BITWISE_NOT:
+            generator_output(code_gen, "\tnot %s\n", r1_n);
+            break;
+        case TOKEN_MINUS_OP:
+            generator_output(code_gen, "\tneg %s\n", r1_n);
+            break;
+    }
+    return r1;
+}
+
 int generate_expression(CodeGen *code_gen, ScopeNode* scope, ASTNode* ast)
 {
     int r;
@@ -386,13 +406,7 @@ int generate_expression(CodeGen *code_gen, ScopeNode* scope, ASTNode* ast)
     {
         return generate_func_call(code_gen, scope, ast);
     }
-    else if(ast->type == TOKEN_COUNT + SYMBOL_ARR_ACC)
-    {
-        r = allocate_register(code_gen);
-        load_token_to_register(scope, code_gen, r, ast);
-        return r;
-    }
-    else if(ast->num_of_children==0)
+    else if(ast->type == TOKEN_COUNT + SYMBOL_ARR_ACC || ast->num_of_children==0)
     {
         r = allocate_register(code_gen);
         load_token_to_register(scope, code_gen, r, ast);
@@ -404,9 +418,10 @@ int generate_expression(CodeGen *code_gen, ScopeNode* scope, ASTNode* ast)
         r_temp = generate_expression(code_gen, scope, ast->children[1]);
         return generate_binary_expressions(code_gen, ast, r, r_temp);
     }
-    else
+    else // children == 1
     {
-        return 0; // TODO UNARY EXPRESSION
+        r = generate_expression(code_gen, scope, ast->children[0]);
+        return generate_unary_expression(code_gen, ast, r);
     }
 }
 
@@ -431,7 +446,7 @@ void generate_arr_dec_ass(CodeGen* code_gen, symbol_item* item, const char* s)
     {
         buffer[1] = *s;
         generator_output(code_gen, "\tmov %s [%s-%d], %s\n", size, bp,
-                         item->scope->parent->bytes_used_since_last_frame + item->offset +
+                         item->offset +
                          index*(convert_type_to_bytes(item->type[0])),
                          buffer);
         index++;
@@ -660,6 +675,7 @@ void generate_statement(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
         case TOKEN_BITWISE_AND:
         case TOKEN_BITWISE_OR:
         case TOKEN_BITWISE_XOR:
+        case TOKEN_BITWISE_NOT:
         case TOKEN_ASTERISK:
         case TOKEN_F_SLASH:
         case TOKEN_COUNT + SYMBOL_FUNC_CALL:
@@ -739,6 +755,7 @@ void generate_output_stmt(CodeGen *code_gen, ScopeNode *scope, ASTNode *ast)
     const char* r1_n = get_register_name(code_gen, r1);
     int r2 = allocate_register(code_gen);
     const char* r2_n = get_register_name(code_gen, r2);
+
     generator_output(code_gen, mov, ax, r1_n);
     generator_output(code_gen, "\tlea %s, [REL _Message+9]\n", r2_n);
 
@@ -758,6 +775,14 @@ void generate_output_stmt(CodeGen *code_gen, ScopeNode *scope, ASTNode *ast)
     if(item == NULL || item->type[0] != TOKEN_CHAR)
     {
         int label = create_label();
+        int not_neg_label = create_label();
+        int not_neg_label2 = create_label();
+        generator_output(code_gen, "\tpush %s\n", ax); // save ax
+        generator_output(code_gen, "\ttest %s, %s\n", ax, ax); // block to neg ax if it's negative
+        generator_output(code_gen, "\tjns %s\n", get_label_name(not_neg_label));
+        generator_output(code_gen, "\tneg %s\n", ax);
+        generator_output(code_gen, "%s:\n", get_label_name(not_neg_label));
+
         generator_output(code_gen, "\tmov %sd, 10\n", r1_n);
         generator_output(code_gen, "%s:\n", get_label_name(label));
         generator_output(code_gen, "\txor rdx, rdx\n"
@@ -770,14 +795,20 @@ void generate_output_stmt(CodeGen *code_gen, ScopeNode *scope, ASTNode *ast)
         generator_output(code_gen, "\ttest rax, rax\n"
                                    "\tjnz %s\n", get_label_name(label));
 
+        generator_output(code_gen, "\tpop %s\n", ax); // retrieve ax for second negative check
+        generator_output(code_gen, "\ttest %s, %s\n", ax, ax);
+        generator_output(code_gen, "\tjns %s\n", get_label_name(not_neg_label2)); // if not negative skip
+        generator_output(code_gen, "\tmov byte [%s], '-'\n", r2_n);
+        generator_output(code_gen, "\tdec %s\n", r2_n);
+        generator_output(code_gen, "%s:\n", get_label_name(not_neg_label2));
         generator_output(code_gen, "\tinc %s\n", r2_n);
-        free_register(code_gen, r1);
+
     }
     else
     {
         generator_output(code_gen, "\tmov byte [%s], al\n", r2_n);
     }
-
+    free_register(code_gen, r1);
     generator_output(code_gen, "\tpush r8\n"
                                "\tpush r9\n");
 

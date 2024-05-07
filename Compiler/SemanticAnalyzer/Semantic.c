@@ -519,7 +519,9 @@ int analyze_statements(ASTNode *ast, ScopeNode *scope, int scope_index)
                     error |= !analyze_for(child, scope->children[scope_ind++]);
                     break;
                 case SYMBOL_IF_ELSE + TOKEN_COUNT:
-                    error |= !analyze_else(child, scope->children[scope_ind++]); // INTENTIONAL NON BREAK
+                    error |= !analyze_if(child, scope->children[scope_ind++]);
+                    error |= !analyze_else(child, scope->children[scope_ind++]);
+                    break;
                 case SYMBOL_IF + TOKEN_COUNT:
                     error |= !analyze_if(child, scope->children[scope_ind++]);
                     break;

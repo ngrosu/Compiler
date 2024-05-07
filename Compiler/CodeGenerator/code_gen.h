@@ -73,6 +73,10 @@ void generate_assignment(CodeGen *code_gen, ScopeNode* scope, ASTNode* ast);
 
 int generate_expression(CodeGen *code_gen, ScopeNode* scope, ASTNode* ast);
 
+int generate_binary_expressions(CodeGen *code_gen, ASTNode *ast, int r1, int r2);
+
+int generate_unary_expression(CodeGen *code_gen, ASTNode *ast, int r1);
+
 void generate_var_dec_ass(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast);
 
 void generate_declaration(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast);

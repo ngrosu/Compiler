@@ -1,13 +1,72 @@
-char msg[10] = "Hello man!";
-
-void helper
+void newLine
 {
-    for(int i = 0; i < 10; i = i + 1;)
-    {
-        OUTPUT msg[i];
-    }
+    char c = 13;
+    OUTPUT c;
+    c = c-3;
+    OUTPUT c;
 }
+
+char get_RPS
+{
+    char result = 0;
+    char temp = 0;
+    while(temp !=10 || (result != 'R' && result != 'S' && result !='P')) // carriage return
+    {
+        INPUT temp;
+        if(temp != 13 && temp != 10)
+        {
+        result = temp; // get the last character before newline
+        }
+    }
+    return result;
+}
+
+void game
+{
+    char player1;
+    char player2;
+    char a[31] = "Welcome to rock paper scissors!";
+    for(int i = 0; i < 31; i = i + 1;) { OUTPUT a[i]; }
+    newLine();
+    char b[21] = "Player 1: pick R/P/S!";
+    for(int i = 0; i < 21; i = i + 1;) { OUTPUT b[i]; }
+    newLine();
+    player1 = get_RPS();
+
+    char c[21] = "Player 2: pick R/P/S!";
+    for(int i = 0; i < 21; i = i + 1;) { OUTPUT c[i]; }
+    newLine();
+    player2 = get_RPS();
+
+    if(player1 == player2)
+    {
+        char tie[4] = "Tie!";
+        for(int i = 0; i < 4; i = i + 1;) { OUTPUT tie[i]; }
+        newLine();
+    }
+    else
+    {
+    char winnerstr[15] = "The winner is: ";
+    int winner = 0;
+    if(player1 == 'R' && player2 == 'P' || player1 == 'P' && player2 == 'S' || player1 == 'S' && player2 == 'R')
+    {
+        winner = 2;
+    }
+    else
+    {
+        winner = 1;
+    }
+    for(int i = 0; i < 15; i = i + 1;) { OUTPUT winnerstr[i]; }
+    OUTPUT winner;
+    }
+
+}
+
 void main
 {
-    helper();
+    while(1)
+    {
+    game();
+    newLine();
+    }
 }
