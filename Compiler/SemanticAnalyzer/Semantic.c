@@ -109,7 +109,10 @@ int analyze_var_dec(ASTNode* ast, ScopeNode* scope)
                                                                      " to variable ", ast->children[1]->token->lexeme);
         }
         int temp_type = get_expression_type(ast->children[2], scope);
-        if(ast->children[0]->type != resolve_types(temp_type, ast->children[0]->type))
+        if(resolve_types(temp_type, ast->children[0]->type) != ast->children[0]->type || (
+                ast->children[0]->type == TOKEN_COUNT + SYMBOL_POINTER
+                && temp_type != TOKEN_COUNT + SYMBOL_POINTER)
+                )
         {
             char err[39 + TOKEN_MAXSIZE];
             sprintf(err, "variable %s of type %s assigned type %s", ast->children[1]->token->lexeme,
@@ -125,12 +128,13 @@ int analyze_assignment(ASTNode* ast, ScopeNode* scope)
 {
     symbol_item* item;
     int result = 1;
+    result &= analyze_expression(ast->children[1], scope);
     if (ast->children[0]->type == TOKEN_IDENTIFIER) // check if assigning to an identifier
     {
         item = check_var_declared(ast->children[0], scope);
         if (item != NULL)
         {
-            if(item->type[1] != SYMBOL_VAR_DEC + TOKEN_COUNT)
+            if(item->symbol_type != SYMBOL_VAR_DEC + TOKEN_COUNT)
             {
                 result = 0;
                 report_error(ERR_SEMANTIC, ast->start_line, "Use of non-variable identifier as variable | ", ast->children[0]->token->lexeme);
@@ -169,16 +173,15 @@ int analyze_assignment(ASTNode* ast, ScopeNode* scope)
         item = check_var_declared(ast->children[0]->children[0], scope);
         result &= analyze_arr_acc(ast->children[0], scope);
     }
-    result &= analyze_expression(ast->children[1], scope);
     int type = get_expression_type(ast->children[1], scope);
     if (type == TOKEN_ERROR)
         result = 0;
-    else if (resolve_types(item->type[0], type) != item->type[0])
+    else if (resolve_types(item->data_type->type, type) != item->data_type->type)
     {
         result = 0;
         char err[63];
         sprintf(err, "Tried assigning expression of type %s to item of type %s, ", get_token_name(type),
-                get_token_name(item->type[0]));
+                get_token_name(item->data_type->type));
         report_error(ERR_SEMANTIC, ast->start_line, err, ast->children[0]->token->lexeme);
     }
     return result;
@@ -211,10 +214,10 @@ int analyze_arr_acc(ASTNode* ast, ScopeNode* scope)
     symbol_item* item = check_var_declared(ast->children[0], scope);
     if (item != NULL)
     {
-        if (item->type[1] != SYMBOL_ARR_DEC + TOKEN_COUNT)
+        if (item->data_type->type != SYMBOL_POINTER + TOKEN_COUNT)
         {
             result = 0;
-            report_error(ERR_SEMANTIC, ast->start_line, "Tried to access non-array identifier as array | ",
+            report_error(ERR_SEMANTIC, ast->start_line, "Tried to dereference an identifier that is not a pointer | ",
                          ast->children[0]->token->lexeme);
         }
     }
@@ -224,18 +227,19 @@ int analyze_arr_acc(ASTNode* ast, ScopeNode* scope)
     return result;
 }
 
+
 int analyze_var_acc(ASTNode* ast, ScopeNode* scope)
 {
     int result = 1;
     symbol_item* item = check_var_declared(ast, scope);
     if(item != NULL)
     {
-        if(item->type[1] != SYMBOL_VAR_DEC + TOKEN_COUNT)
-        {
-            report_error(ERR_SEMANTIC, ast->start_line, "Use of non-variable identifier as variable | ", ast->token->lexeme);
-            result = 0;
-        }
-        else if (item->assigned == 0)
+//        if(item->symbol_type != SYMBOL_VAR_DEC + TOKEN_COUNT)
+//        {
+//            report_error(ERR_SEMANTIC, ast->start_line, "Use of non-variable identifier as variable | ", ast->token->lexeme);
+//            result = 0;
+//        }
+        if (item->assigned == 0)
         {
             report_error(ERR_SEMANTIC, ast->start_line, "Use of unassigned variable | ", ast->token->lexeme);
             result = 0;
@@ -248,6 +252,8 @@ int resolve_types(int type1, int type2)
 {
     if(type1 == TOKEN_ERROR || type2 == TOKEN_ERROR)
         return TOKEN_ERROR;
+    if(type1 == TOKEN_COUNT + SYMBOL_POINTER || type2 == TOKEN_COUNT + SYMBOL_POINTER)
+        return TOKEN_COUNT + SYMBOL_POINTER;
     if(type1 == TOKEN_INT || type2 == TOKEN_INT)
         return TOKEN_INT;
     if(type1 == TOKEN_SHORT || type2 == TOKEN_SHORT)
@@ -260,6 +266,7 @@ int resolve_types(int type1, int type2)
 
 int get_expression_type(ASTNode *ast, ScopeNode *scope)
 {
+    symbol_item* item;
     int result = TOKEN_CHAR;
     switch (ast->type)
     {
@@ -279,9 +286,9 @@ int get_expression_type(ASTNode *ast, ScopeNode *scope)
             result = check_num_type(ast);
             break;
         case TOKEN_IDENTIFIER:
-            if(check_var_declared(ast, scope))
+            if(analyze_var_acc(ast, scope))
             {
-                result = find_var(scope, ast->token->lexeme)->type[0];
+                result = find_var(scope, ast->token->lexeme)->data_type->type;
             }
             else
                 result = TOKEN_ERROR;
@@ -289,14 +296,14 @@ int get_expression_type(ASTNode *ast, ScopeNode *scope)
 
         case SYMBOL_ARR_ACC + TOKEN_COUNT:
             if(analyze_arr_acc(ast, scope))
-                result = find_var(scope, ast->children[0]->token->lexeme)->type[0];
+                result = find_var(scope, ast->children[0]->token->lexeme)->data_type->type;
             else
                 result = TOKEN_ERROR;
             break;
 
         case SYMBOL_FUNC_CALL + TOKEN_COUNT:
             if(analyze_func_call(ast, scope))
-                result = find_var(scope, ast->children[0]->token->lexeme)->type[0];
+                result = find_var(scope, ast->children[0]->token->lexeme)->data_type->type;
             else
                 result = TOKEN_ERROR;
             break;
@@ -425,7 +432,7 @@ int analyze_func_call(ASTNode* ast, ScopeNode* scope)
     {
         result = 0;
     }
-    else if (item->type[1] != SYMBOL_FUNC_DEC + TOKEN_COUNT)
+    else if (item->symbol_type != SYMBOL_FUNC_DEC + TOKEN_COUNT)
     {
         report_error(ERR_SEMANTIC, ast->start_line, "Non-func identifier used as func | ", ast->children[0]->token->lexeme);
     }
@@ -444,12 +451,15 @@ int analyze_func_call(ASTNode* ast, ScopeNode* scope)
             for(int i = 0; i < num_of_args; i++)
             {
                 int temp_type = get_expression_type(ast->children[1]->children[i], scope);
-                if(resolve_types(temp_type, item->parameters[i].type) != item->parameters[i].type)
+                if(resolve_types(temp_type, item->parameters[i].type->type) != item->parameters[i].type->type || (
+                        item->parameters[i].type->type == TOKEN_COUNT + SYMBOL_POINTER
+                        && temp_type != TOKEN_COUNT + SYMBOL_POINTER)
+                        )
                 {
                     result = 0;
                     char err[61 + TOKEN_MAXSIZE];
-                    sprintf(err, " received argument of type %s for parameter \"%s\" of type %s", get_token_name(temp_type),
-                            item->parameters[i].name, get_token_name(item->parameters[i].type));
+                    sprintf(err, " received argument of type %s for parameter \"%s\" of type %s", get_symbol_name(temp_type),
+                            item->parameters[i].name, get_symbol_name(item->parameters[i].type->type));
                     report_error(ERR_SEMANTIC, ast->start_line, ast->children[0]->token->lexeme, err);
 
                 }

@@ -470,7 +470,7 @@ AVLNode* init_grammar()
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETERS, par_arr+2, 1, 0, FUNC_DEFAULT));
     //root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETERS, TOKEN_COUNT + SYMBOL_PARAMETER, 0));
     par_arr[0] = TOKEN_COUNT + SYMBOL_TYPE; par_arr[1] = TOKEN_IDENTIFIER;
-    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETER, par_arr, 2, 0, FUNC_CHAIN));
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_PARAMETER, par_arr, 2, 0, FUNC_TAIL));
 
 
     // expressions
@@ -544,6 +544,9 @@ AVLNode* init_grammar()
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_ULONG, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_CHAR, 0));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_VOID, 0));
+    root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_TYPE, TOKEN_COUNT+SYMBOL_POINTER, 0));
+    arr1[0] = TOKEN_ASTERISK; arr1[1] = TOKEN_COUNT + SYMBOL_TYPE;
+    root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_POINTER, arr1, 2, 0, FUNC_REM_SECOND_L));
     arr1[0] = TOKEN_CHAR_LITERAL;
     root = insert(root, init_prod_rule(TOKEN_COUNT + SYMBOL_NUMBER, arr1, 1, 0, FUNC_CHAR));
     root = insert(root, init_short_prod_rule(TOKEN_COUNT + SYMBOL_NUMBER, TOKEN_INT_LITERAL, 0));

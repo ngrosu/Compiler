@@ -1,11 +1,76 @@
-int main
+
+
+void newLine
 {
-    int a; // here a is defined OUTSIDE of the if
-    if(1)
+    char c = 13;
+    OUTPUT c;
+    c = c-3;
+    OUTPUT c;
+}
+
+void print: *char arr, int len
+{
+    for(int i = 0; i < len; i = i+1;)
     {
-        int a; // however the inner variable a, shadows the variable a from the outer scope
-        a = 3; // so in assigning a=3, only the inner scope a is assigned
+        OUTPUT arr[i];
     }
-    int x = a + 2;
-    return x;
+    newLine();
+}
+
+char get_RPS
+{
+    char result = 0;
+    char temp = 0;
+    while(temp !=10 || (result != 'R' && result != 'S' && result !='P')) // carriage return
+    {
+        INPUT temp;
+        if(temp != 13 && temp != 10)
+        {
+        result = temp; // get the last character before newline
+        }
+    }
+    return result;
+}
+
+void game: *char welcome, int len1, *char p1_turn, *char p2_turn, int len2, *char tie, int len3, *char winnerstr, int len4
+{
+    char player1;
+        char player2;
+        print(welcome, len1);
+
+        print(p1_turn, len2);
+        player1 = get_RPS();
+
+        print(p2_turn, len2);
+
+        player2 = get_RPS();
+
+        if(player1 == player2)
+        {
+            print(tie, len3);
+        }
+        else
+        {
+        int winner = 0;
+        if(player1 == 'R' && player2 == 'P' || player1 == 'P' && player2 == 'S' || player1 == 'S' && player2 == 'R')
+        {
+            winner = 2;
+        }
+        else
+        {
+            winner = 1;
+        }
+        for(int i = 0; i < len4; i = i + 1;) { OUTPUT winnerstr[i]; }
+        OUTPUT winner;
+        }
+}
+
+void main
+{
+    char a[31] = "Welcome to rock paper scissors!";
+    char b[21] = "Player 1: pick R/P/S!";
+    char c[21] = "Player 2: pick R/P/S!";
+    char d[4] = "Tie!";
+    char e[15] = "The winner is: ";
+    game(a, 31, b, c, 21, d, 4, e, 15);
 }

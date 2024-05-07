@@ -125,6 +125,7 @@ typedef enum {
     SYMBOL_TERM,
     SYMBOL_FACTOR,
     SYMBOL_TYPE,
+    SYMBOL_POINTER,
     SYMBOL_NUMBER,
     SYMBOL_END_STATEMENT,
     SYMBOL_START,
@@ -159,6 +160,8 @@ typedef enum {
     FUNC_REMOVE_THIRD,
     FUNC_FOR,
     FUNC_CHAR,
+    FUNC_TAIL,
+    FUNC_MIDDLE_TAIL,
     FUNCS_COUNT
 } ASTFuncs;
 // PARSER
@@ -180,6 +183,7 @@ typedef enum {
 #define INPUT_BUFFER "_ReadChar"
 #define OUTPUT_BUFFER "_Message"
 #define GLOBAL_ADDRESS_FORMAT "[REL %s]"
+#define POINTER_SIZE 8
 // REGISTERS
 #define ax "rax"
 #define cx "rcx"

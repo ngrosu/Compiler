@@ -43,7 +43,7 @@ void add_scope_child(ScopeNode* parent, ScopeNode *child)
 }
 
 symbol_item *
-init_symbol_item(char *name, int data_type, int symbol_type, Param *parameters, int num_of_params, int length,
+init_symbol_item(char *name, ASTNode *data_type, int symbol_type, Param *parameters, int num_of_params, int length,
                  unsigned int line, char assigned)
 {
     symbol_item* result = malloc(sizeof(symbol_item));
@@ -52,7 +52,7 @@ init_symbol_item(char *name, int data_type, int symbol_type, Param *parameters, 
         report_error(ERR_INTERNAL, -1, "FAILED TO ALLOCATE MEMORY FOR SYMBOL TABLE ITEM", NULL);
     }
     result->name = name;
-    result->type[0] = data_type; result->type[1] = symbol_type;
+    result->data_type = data_type; result->symbol_type = symbol_type;
     result->line_of_dec = line;
     result->parameters = parameters;
     result->num_of_params = num_of_params;
@@ -66,8 +66,13 @@ Param* init_params(ASTNode* params)
     Param* result = malloc(sizeof(Param)*params->num_of_children);
     for(int i = 0; i < params->num_of_children; i++)
     {
-        result[i].type = params->children[i]->type;
-        result[i].name = params->children[i]->children[0]->token->lexeme;
+        result[i].type = params->children[i];
+        ASTNode* temp = params->children[i]->children[0];
+        while(temp->num_of_children != 0)
+        {
+            temp = temp->children[0];
+        }
+        result[i].name = temp->token->lexeme;
     }
     return result;
 }
@@ -80,6 +85,7 @@ int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
     char* temp_str;
     Param* params;
     int num_of_items;
+    ASTNode* temp_ast;
     unsigned int line;
     symbol_item* item;
     ScopeNode* new_node;
@@ -96,7 +102,7 @@ int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
                 num_of_items = ast->children[2]->num_of_children;
             }
             else { params = NULL; num_of_items=0; }
-            item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type,
+            item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0],
                                     SYMBOL_FUNC_DEC + TOKEN_COUNT, params, num_of_items, 1, line, 1);
             item_added_success = add_item(scope->table, ast->children[1]->token->lexeme, item);
             item->scope = scope;
@@ -124,9 +130,11 @@ int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
                 error |= !construct_symbol_table_rec(ast->children[3], new_node);
             break;
         case SYMBOL_ARR_DEC + TOKEN_COUNT:
-            line = ast->children[0]->token->line;
+            line = ast->start_line;
             assigned = 1;
-            item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type,
+            temp_ast = init_AST_node(TOKEN_COUNT + SYMBOL_POINTER, malloc(sizeof(ASTNode*)), 1, NULL, ast->children[0]->start_line);
+            temp_ast->children[0] = ast->children[0];
+            item = init_symbol_item(ast->children[1]->token->lexeme ,temp_ast,
                                     SYMBOL_ARR_DEC + TOKEN_COUNT, NULL, 0, (int) strtol(ast->children[2]->token->lexeme,
                                                                                         &temp_str, 10), line, assigned);
             item_added_success = add_item(scope->table, ast->children[1]->token->lexeme, item);
@@ -137,9 +145,9 @@ int construct_symbol_table_rec(ASTNode *ast, ScopeNode *scope)
             }
             break;
         case SYMBOL_VAR_DEC + TOKEN_COUNT:
-            line = ast->children[0]->token->line;
+            line = ast->start_line;
             assigned = (char)(ast->num_of_children != 2);
-            item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0]->type,
+            item = init_symbol_item(ast->children[1]->token->lexeme, ast->children[0],
                                     SYMBOL_VAR_DEC + TOKEN_COUNT, NULL, 0, 1, line, assigned);
             item_added_success = add_item(scope->table, ast->children[1]->token->lexeme, item);
             item->scope = scope;
@@ -258,7 +266,7 @@ void print_scope_tree(ScopeNode *node, int depth, char *finals)
                 }
                 hash_table_item* item = bucket->data;
                 symbol_item* sItem = item->data;
-                printf("%*s:%s -> %s %s len: %d %s\n", 6, "", (char*)item->key, get_symbol_name(sItem->type[0]), get_symbol_name(sItem->type[1]), sItem->size,  sItem->assigned ? "Assigned" : "");
+                printf("%*s:%s -> %s %s len: %d %s\n", 6, "", (char*)item->key, get_symbol_name(sItem->data_type->type), get_symbol_name(sItem->symbol_type), sItem->size,  sItem->assigned ? "Assigned" : "");
                 bucket = bucket->next;
             }
         }

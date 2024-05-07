@@ -29,14 +29,15 @@ void add_scope_child(ScopeNode* parent, ScopeNode *child);
 
 typedef struct param
 {
-    int type;
+    ASTNode* type;
     char* name;
 } Param;
 
 typedef struct SymbolItem
 {
     char* name;
-    int type[2]; //
+    int symbol_type;
+    ASTNode* data_type;
     int offset;
     ScopeNode* scope;
     unsigned int size;
@@ -47,7 +48,7 @@ typedef struct SymbolItem
 } symbol_item;
 
 symbol_item *
-init_symbol_item(char *name, int data_type, int symbol_type, Param *parameters, int num_of_params, int length,
+init_symbol_item(char *name, ASTNode *data_type, int symbol_type, Param *parameters, int num_of_params, int length,
                  unsigned int line, char assigned);
 
 Param* init_params(ASTNode* params);

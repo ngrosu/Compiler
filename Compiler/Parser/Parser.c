@@ -344,6 +344,33 @@ ASTNode* remove_second_last_chain(Parser parser)
     return node_head;
 }
 
+ASTNode* remove_middle_tail(Parser parser)
+{
+
+    ASTNode** child = malloc(1*sizeof(ASTNode*));
+    ASTNode* node_tail, * node_head;
+
+    free(pop(parser->stack));
+    node_tail = pop(parser->stack);
+
+    ASTNode* temp = node_head;
+
+    ast_skip_items(parser, 1);
+
+    free(pop(parser->stack));
+    node_head = pop(parser->stack);
+
+
+    while(temp->num_of_children != 0)
+    {
+        temp = temp->children[0];
+    }
+    temp->children = child;
+    temp->children[0] = node_tail;
+    temp->num_of_children++;
+    return node_head;
+}
+
 ASTNode* remove_second_last(Parser parser)
 {
 
@@ -406,6 +433,26 @@ ASTNode* ast_remove_third(Parser parser)
 
 }
 
+ASTNode* ast_tail(Parser parser)
+{
+    ASTNode** child = malloc(1*sizeof(ASTNode*));
+    ASTNode* node_tail, * node_head;
+    free(pop(parser->stack));
+    node_tail = pop(parser->stack);
+    free(pop(parser->stack));
+    node_head = pop(parser->stack);
+    ASTNode* temp = node_head;
+
+    while(temp->num_of_children != 0)
+    {
+        temp = temp->children[0];
+    }
+    temp->children = child;
+    temp->children[0] = node_tail;
+    temp->num_of_children++;
+    return node_head;
+}
+
 ASTNode* (*reductionFuncs[FUNCS_COUNT])(Parser);
 
 void init_AST_funcs()
@@ -429,6 +476,8 @@ void init_AST_funcs()
     reductionFuncs[FUNC_REM_SECOND_L_CHAIN] = remove_second_last_chain;
     reductionFuncs[FUNC_REM_LAST_TWO_AND_FOURTH_L] = remove_l_two_and_fourth_l;
     reductionFuncs[FUNC_REMOVE_THIRD] = ast_remove_third;
+    reductionFuncs[FUNC_TAIL] = ast_tail;
+    reductionFuncs[FUNC_MIDDLE_TAIL] = remove_middle_tail;
 }
 
 void parse_error_recovery(Parser parser, unsigned int* s, unsigned int symbol)

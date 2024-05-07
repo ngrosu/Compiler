@@ -89,6 +89,8 @@ const char* get_symbol_name(int symbol)
             return "Input";
         case SYMBOL_BREAK:
             return "Break Statement";
+        case SYMBOL_POINTER:
+            return "Pointer";
     }
 
 }
