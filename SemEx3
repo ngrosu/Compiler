@@ -1,4 +1,4 @@
-
+char welc[31] = "Welcome to rock paper scissors!";
 
 void newLine
 {
@@ -67,10 +67,9 @@ void game: *char welcome, int len1, *char p1_turn, *char p2_turn, int len2, *cha
 
 void main
 {
-    char a[31] = "Welcome to rock paper scissors!";
     char b[21] = "Player 1: pick R/P/S!";
     char c[21] = "Player 2: pick R/P/S!";
     char d[4] = "Tie!";
     char e[15] = "The winner is: ";
-    game(a, 31, b, c, 21, d, 4, e, 15);
+    game(welc, 31, b, c, 21, d, 4, e, 15);
 }

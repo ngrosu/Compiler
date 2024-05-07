@@ -969,13 +969,13 @@ void generate_code(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
         }
         if (child->type == TOKEN_COUNT + SYMBOL_ARR_DEC)
         {
+            generator_output(code_gen, "%s: dq $+8\n", child->children[1]->token->lexeme, size, child->children[3]->token->lexeme[0]);
             int leftover = strtol(child->children[2]->token->lexeme, NULL, 10);
             if (child->num_of_children == 4)
             {
-                generator_output(code_gen, "%s: d%c \"%c\"\n", child->children[1]->token->lexeme, size, child->children[3]->token->lexeme[0]);
                 leftover -= strlen(child->children[3]->token->lexeme);
                 int len = (int)strlen(child->children[3]->token->lexeme);
-                for(int j = 1; j < len; j++)
+                for(int j = 0; j < len; j++)
                 {
                     generator_output(code_gen, "\td%c \"%c\"\n", size, child->children[3]->token->lexeme[j]);
                 }
