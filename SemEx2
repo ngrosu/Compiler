@@ -55,29 +55,23 @@ void game
     }
     else
     {
-    char winnerstr[15] = "The winner is: ";
-    int winner = 0;
-    if(player1 == 'R' && player2 == 'P' || player1 == 'P' && player2 == 'S' || player1 == 'S' && player2 == 'R')
-    {
-        winner = 2;
-    }
-    else
-    {
-        winner = 1;
-    }
-    for(int i = 0; i < 15; i = i + 1;) { OUTPUT winnerstr[i]; }
-    OUTPUT winner;
+        char winnerstr[15] = "The winner is: ";
+        int winner = 0;
+        if(player1 == 'R' && player2 == 'P' || player1 == 'P' && player2 == 'S' || player1 == 'S' && player2 == 'R')
+        {
+            winner = 2;
+        }
+        else
+        {
+            winner = 1;
+        }
+        for(int i = 0; i < 15; i = i + 1;) { OUTPUT winnerstr[i]; }
+        OUTPUT winner;
     }
 
 }
 
 void main
 {
-    char ar[7] = "1234567";
-    *char arr[5];
-
-    arr[0] = ar;
-    *char a = arr[0];
-    print(a, 7);
     game();
 }

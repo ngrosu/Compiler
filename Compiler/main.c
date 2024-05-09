@@ -79,7 +79,7 @@ int main1()
 int main()
 {
     int e;
-    Lexer lexer = init_lexer("../../SemEx3");
+    Lexer lexer = init_lexer("../../SemEx2");
 //    print_transition_matrix(lexer->dfa);
     if(!tokenize(lexer))
     {exit(0);}

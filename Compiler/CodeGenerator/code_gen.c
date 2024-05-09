@@ -614,12 +614,15 @@ int generate_func_call(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
 
 void generate_return(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
 {
-    int r = generate_expression(code_gen, scope, ast->children[0]);
-    scope = is_in_scope(scope, SCOPE_FUNCTION);
-    generator_output(code_gen, "\txor rax, rax\n");
-    generator_output(code_gen, mov, ax, get_register_name(code_gen, r));
+    if (ast->num_of_children != 0)
+    {
+        int r = generate_expression(code_gen, scope, ast->children[0]);
+        scope = is_in_scope(scope, SCOPE_FUNCTION);
+        generator_output(code_gen, "\txor rax, rax\n");
+        generator_output(code_gen, mov, ax, get_register_name(code_gen, r));
+        free_register(code_gen, r);
+    }
     generator_output(code_gen, "\tjmp _%s_epilogue\n", scope->name);
-    free_register(code_gen, r);
 }
 
 void generate_function(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
@@ -721,6 +724,9 @@ void generate_statement(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
         case TOKEN_F_SLASH:
         case TOKEN_COUNT + SYMBOL_FUNC_CALL:
             free_register(code_gen, generate_expression(code_gen, scope, ast));
+            break;
+        case TOKEN_COUNT + SYMBOL_STATEMENTS:
+            generate_code_block(code_gen, scope, ast);
             break;
         default:
             break;
@@ -996,12 +1002,4 @@ void generate_code(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast)
                                "\tcall ExitProcess\n");
 
     generate_code_block(code_gen, scope, ast);
-    for(int i = 0; i< ast->num_of_children; i++)
-    {
-        if(ast->children[i]->type == TOKEN_COUNT+SYMBOL_FUNC_DEC)
-        {
-            generate_code_block(code_gen, scope, ast->children[i]);
-        }
-    }
-
 }
