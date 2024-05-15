@@ -887,8 +887,8 @@ void load_register_to_symbol(CodeGen* code_gen, ScopeNode* scope, ASTNode* symbo
         int r = allocate_register(code_gen);
         load_ptr_index(code_gen, scope, symbol_ast, r);
         free_register(code_gen, r);
-        generator_output(code_gen, "\tmov %s [%s], %s%c\n", convert_type_to_size_full(item->data_type->type),
-                         ax, get_register_name(code_gen, source_reg), convert_type_to_size(item->data_type->type));
+        generator_output(code_gen, "\tmov %s [%s], %s%c\n", convert_type_to_size_full(item->data_type->children[0]->type),
+                         ax, get_register_name(code_gen, source_reg), convert_type_to_size(item->data_type->children[0]->type));
     } else
     {
         symbol_item* item = find_var(scope, symbol_ast->token->lexeme);
@@ -906,7 +906,7 @@ void load_number_to_symbol(CodeGen* code_gen, ScopeNode* scope, ASTNode* symbol_
         int r = allocate_register(code_gen);
         load_ptr_index(code_gen, scope, symbol_ast, r);
         free_register(code_gen, r);
-        generator_output(code_gen, "\tmov %s [%s], %s\n", convert_type_to_size_full(item->data_type->type),
+        generator_output(code_gen, "\tmov %s [%s], %s\n", convert_type_to_size_full(item->data_type->children[0]->type),
                          ax, num);
     } else
     {

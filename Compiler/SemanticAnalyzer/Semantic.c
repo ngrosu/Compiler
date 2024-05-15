@@ -138,7 +138,7 @@ int analyze_assignment(ASTNode* ast, ScopeNode* scope)
             {
                 result = 0;
                 report_error(ERR_SEMANTIC, ast->start_line, "Use of non-variable identifier as variable | ", ast->children[0]->token->lexeme);
-            } // TODO fix bug where if u do a variable = to itself it thinks its assigned
+            }
             int run = 1;
             if(item->assigned == 0)
             {

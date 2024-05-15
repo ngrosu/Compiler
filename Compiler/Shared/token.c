@@ -23,7 +23,7 @@ void delete_token(Token token)
 
 char* get_token_name(TokenType type)
 {
-    switch (type)
+    switch(type)
     {
         case TOKEN_ERROR:
             return "ERROR";
