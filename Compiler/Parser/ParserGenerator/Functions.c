@@ -248,7 +248,7 @@ AVLNode* goto_helper(AVLNode* set, AVLNode* result, int symbol)
     ProdRule data;
 
     TreeIterator* iter = init_tree_iterator(set);
-    while(!iterator_is_empty(iter))
+    while(!iterator_is_empty(iter)) // iterate over the set
     {
         data = ((AVLNode* )iterator_next(iter))->data;
         if (data->dot != data->bodySize) // make sure the dot is not at the end of the rule

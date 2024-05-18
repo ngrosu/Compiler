@@ -18,7 +18,7 @@ Lexer init_lexer(char* file_path)
     init_DFA(lexer->dfa);  // initialize the DFA lookup table
     lexer->file = fopen(file_path, "r");
     if (lexer->file == NULL) {
-        report_error(ERR_INTERNAL, -1, "Failed to open file", NULL);
+        report_error(ERR_INTERNAL, -1, "Failed to open source file\n", NULL);
         free(lexer); // Free the previously allocated memory
         exit(EXIT_FAILURE);
     }
@@ -169,7 +169,7 @@ char tokenize(Lexer lexer)
         if(next_token->type == 0) // if it's a token error, report an error
         {
             report_error(ERR_LEXICAL, lexer->curr_line, "Invalid Token/Unexpected character", NULL);
-            error = 1; // exit_lexer()
+            error = 1;
         }
         add_token(lexer, next_token); // add the token to the lexer
         if(next_token->type == TOKEN_EOF)

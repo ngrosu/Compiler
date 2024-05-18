@@ -68,7 +68,7 @@ const char* get_label_name(int i) // value will be changed after each call, so m
     return label_name;
 }
 
-void load_ptr_index(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast, int scratch_reg)
+void load_ptr_index_to_ax(CodeGen* code_gen, ScopeNode* scope, ASTNode* ast, int scratch_reg)
 {
     symbol_item* item;
     item = find_var(scope, ast->children[0]->token->lexeme);
@@ -125,8 +125,8 @@ void load_token_to_register(ScopeNode* scope, CodeGen* code_gen, int register_nu
     {
         case TOKEN_COUNT + SYMBOL_ARR_ACC:
             item = find_var(scope, ast->children[0]->token->lexeme);
-            load_ptr_index(code_gen, scope, ast, register_num);
-            if(item->data_type->type == SYMBOL_POINTER + TOKEN_COUNT)
+            load_ptr_index_to_ax(code_gen, scope, ast, register_num);
+            if(item->data_type->children[0]->type == SYMBOL_POINTER + TOKEN_COUNT)
             {
                 generator_output(code_gen, "\tmov %s, [%s]\n",
                                  get_register_name(code_gen, register_num),
@@ -656,7 +656,6 @@ void update_params(ScopeNode *scope, ASTNode *ast)
         {
             total_size += convert_type_to_bytes(params->children[i]->type);
         }
-        printf("total %d", total_size);
         total_size = ((total_size+7)/16+1)*16;
         for (int i = 0; i < params->num_of_children; i++)
         {
@@ -885,7 +884,7 @@ void load_register_to_symbol(CodeGen* code_gen, ScopeNode* scope, ASTNode* symbo
     {
         symbol_item* item = find_var(scope, symbol_ast->children[0]->token->lexeme);
         int r = allocate_register(code_gen);
-        load_ptr_index(code_gen, scope, symbol_ast, r);
+        load_ptr_index_to_ax(code_gen, scope, symbol_ast, r);
         free_register(code_gen, r);
         generator_output(code_gen, "\tmov %s [%s], %s%c\n", convert_type_to_size_full(item->data_type->children[0]->type),
                          ax, get_register_name(code_gen, source_reg), convert_type_to_size(item->data_type->children[0]->type));
@@ -904,7 +903,7 @@ void load_number_to_symbol(CodeGen* code_gen, ScopeNode* scope, ASTNode* symbol_
     {
         symbol_item* item = find_var(scope, symbol_ast->children[0]->token->lexeme);
         int r = allocate_register(code_gen);
-        load_ptr_index(code_gen, scope, symbol_ast, r);
+        load_ptr_index_to_ax(code_gen, scope, symbol_ast, r);
         free_register(code_gen, r);
         generator_output(code_gen, "\tmov %s [%s], %s\n", convert_type_to_size_full(item->data_type->children[0]->type),
                          ax, num);

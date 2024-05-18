@@ -19,7 +19,6 @@ SemAnalyzer* init_sem_analyzer(ASTNode* ast);
 int analyze_statements(ASTNode *ast, ScopeNode *scope, int scope_index);
 
 int check_num_type(ASTNode *ast);
-int cmp_types(ASTNode *type1, ASTNode* type2);
 int analyze_func(ASTNode *ast, ScopeNode *scope);
 int analyze_while(ASTNode *ast, ScopeNode *scope);
 int analyze_for(ASTNode *ast, ScopeNode *scope);

@@ -14,12 +14,15 @@ int main(int argc, char **argv)
 {
     char* file_name;
     if(argc != 2)
-    {printf("Please make sure to provide the source code name");
-    return 1;}
+    {
+        printf("Please make sure to provide the source code name");
+        exit(1);
+    }
     else
     {
         file_name = argv[1];
     }
+
     Lexer lexer = init_lexer(file_name);
     int result = (int)tokenize(lexer);
     if(result == 0)
@@ -27,7 +30,7 @@ int main(int argc, char **argv)
         printf("\nCompiler terminated after lexing due to lexical error\n");
         exit(1);
     }
-    printf("Passed lexer");
+    printf("Passed lexer\n");
 
 
     Parser parser = init_parser(lexer->tokens, lexer->num_of_tokens,
@@ -38,7 +41,7 @@ int main(int argc, char **argv)
         printf("\nCompiler terminated after parsing due to syntax error\n");
         exit(1);
     }
-    printf("Passed parser");
+    printf("Passed parser\n");
     pop(parser->stack); // remove the state that is above the AST node on the stack
 
     ScopeNode* global = init_scope_node(SCOPE_GLOBAL, TOKEN_ERROR, 0);
@@ -48,6 +51,7 @@ int main(int argc, char **argv)
         printf("\nCompiler terminated during semantic analysis due to semantic error\n");
         exit(1);
     }
+    printf("Passed semantic 1/2\n");
 
     result = analyze_statements(parser->stack->content->data, global, 0);
     if (result == 0)
@@ -55,7 +59,9 @@ int main(int argc, char **argv)
         printf("\nCompiler terminated after semantic analysis due to semantic error\n");
         exit(1);
     }
-    printf("Passed semantic");
+    printf("Passed semantic 2/2\n");
     generate_code(init_code_gen(), global, (ASTNode *) (parser->stack->content->data));
+
+    printf("\nFinished compiling to NASM 64-bit Assembly for Windows\n");
     return 0;
 }

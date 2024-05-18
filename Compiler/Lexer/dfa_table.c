@@ -146,7 +146,6 @@ bool allocate_states(DFA dfa, StatesInt new_amount)
         memset(dfa->states+dfa->num_of_states, 0,  // set all the newly allocated memory to 0
                (new_amount-dfa->num_of_states)*(sizeof(TokenType)));
 
-
         temp = realloc(dfa->transition_matrix, new_amount *
                                     NUM_OF_CHARS * sizeof(dfa->transition_matrix[0][0]));
         if (!temp)

@@ -26,7 +26,7 @@ ProdRule init_prod_rule(int head, const int *body, short bodySize, short dot, AS
 ProdRule init_short_prod_rule(int head, int body, short dot);
 
 // init a prod rule with a lookahead symbol (LR1 item)
-ProdRule init_LR1_item(int head, const int* body, short bodySize, short dot, int lookahead); // init a prod rule
+ProdRule init_LR1_item(int head, const int* body, short bodySize, short dot, int lookahead);
 
 // compare two production rules (for AVL), return -1 if a < b, 0 if equal, 1 if a > b
 short compare_prod_rules(ProdRule a, ProdRule b);
